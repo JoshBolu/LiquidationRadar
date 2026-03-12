@@ -23,13 +23,12 @@
 // internal & private view & pure functions
 // external & public view & pure functions
 
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.28;
 
-import {DecentralizedStableCoin} from "./DecentralizedStableCoin.sol";
+import {ReactiveSomniaCoin} from "./ReactiveSomniaCoin.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
-import {OracleLib} from "./libraries/OracleLib.sol";
+import {IDemoOracle} from "./oracle/IDemoOracle.sol";
 
 /*
  * @title DCSEngine
@@ -48,23 +47,18 @@ import {OracleLib} from "./libraries/OracleLib.sol";
  * @notice This contract is VERY loosely based on the MakerDAO DSS (DAI) sytem
  */
 
-contract DSCEngine is ReentrancyGuard {
+contract RSCEngine is ReentrancyGuard {
     /*//////////////
      * Errors
      /////////////*/
-    error DSCEngine__NeedsMoreThanZero();
-    error DSCEngine__TokenAddressesAndPriceFeedAdddressesMustBeSameLength();
-    error DSCEngine__NotAllowedToken();
-    error DSCEngine__TransferFailed();
-    error DSCEngine__BreaksHealthFactor(uint256 userHealthFactor);
-    error DSCEngine__MintFailed();
-    error DSCEngine__HealthFactorOk();
-    error DSCEngine__HealthFactorNotImproved();
-
-    ////////////////////
-    //// Types /////////
-    ////////////////////
-    using OracleLib for AggregatorV3Interface;
+    error RSCEngine__NeedsMoreThanZero();
+    error RSCEngine__OracleCannotBeZero();
+    error RSCEngine__NotAllowedToken();
+    error RSCEngine__TransferFailed();
+    error RSCEngine__BreaksHealthFactor(uint256 userHealthFactor);
+    error RSCEngine__MintFailed();
+    error RSCEngine__HealthFactorOk();
+    error RSCEngine__HealthFactorNotImproved();
 
     /*//////////////
      * State variables
@@ -76,13 +70,14 @@ contract DSCEngine is ReentrancyGuard {
     uint256 private constant MIN_HEALTH_FACTOR = 1e18;
     uint256 private constant LIQUIDATOR_BONUS = 10; // this means 10% bonus
 
-    mapping(address token => address priceFeed) private priceFeeds; // tokenToPriceFeed
+    IDemoOracle private sOracle;
+    mapping(address token => bool) private sIsCollateralToken;
     mapping(address user => mapping(address token => uint256 amount)) private collateralDeposit;
-    mapping(address user => uint256 amountDscMinted) private DscMinted;
+    mapping(address user => uint256 amountDscMinted) private dscMinted;
 
     address[] private collateralTokens;
 
-    DecentralizedStableCoin private i_dsc;
+    ReactiveSomniaCoin private iRsc;
 
     /*//////////////
      * Events
@@ -96,34 +91,41 @@ contract DSCEngine is ReentrancyGuard {
      * Modifiers
      /////////////*/
     modifier moreThanZero(uint256 amount) {
-        if (amount == 0) {
-            revert DSCEngine__NeedsMoreThanZero();
-        }
+        _moreThanZero(amount);
         _;
     }
 
     modifier isAllowedToken(address token) {
-        if (priceFeeds[token] == address(0)) {
-            revert DSCEngine__NotAllowedToken();
-        }
+        _isAllowedToken(token);
         _;
+    }
+
+    function _moreThanZero(uint256 amount) internal pure {
+        if (amount == 0) {
+            revert RSCEngine__NeedsMoreThanZero();
+        }
+    }
+
+    function _isAllowedToken(address token) internal view {
+        if (!sIsCollateralToken[token]) {
+            revert RSCEngine__NotAllowedToken();
+        }
     }
 
     /*//////////////
      * Functions
      /////////////*/
 
-    constructor(address[] memory tokenAddresses, address[] memory priceFeedAddresses, address dscAddress) {
-        // USD Price Feeds
-        if (tokenAddresses.length != priceFeedAddresses.length) {
-            revert DSCEngine__TokenAddressesAndPriceFeedAdddressesMustBeSameLength();
+    constructor(address[] memory tokenAddresses, address oracleAddress, address rscAddress) {
+        if (oracleAddress == address(0)) {
+            revert RSCEngine__OracleCannotBeZero();
         }
-        // for example ETH/USD, BTC/USD e.t.c
+        sOracle = IDemoOracle(oracleAddress);
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
-            priceFeeds[tokenAddresses[i]] = priceFeedAddresses[i];
+            sIsCollateralToken[tokenAddresses[i]] = true;
             collateralTokens.push(tokenAddresses[i]);
         }
-        i_dsc = DecentralizedStableCoin(dscAddress);
+        iRsc = ReactiveSomniaCoin(rscAddress);
     }
 
     ///////////////////////////////
@@ -136,7 +138,7 @@ contract DSCEngine is ReentrancyGuard {
     * @param amountDscToMint the amount of decentralized stablecoin to mint
     * @notice this function will deposit your collateral and mint dsc in one transaction
     */
-    function depositCollateralAndMintDSC(
+    function depositCollateralAndMintDsc(
         address tokenCollateralAddress,
         uint256 amountCollateral,
         uint256 amountDscToMint
@@ -160,7 +162,7 @@ contract DSCEngine is ReentrancyGuard {
         emit CollateralDeposited(msg.sender, tokenCollateralAddress, amountCollateral);
         bool success = IERC20(tokenCollateralAddress).transferFrom(msg.sender, address(this), amountCollateral);
         if (!success) {
-            revert DSCEngine__TransferFailed();
+            revert RSCEngine__TransferFailed();
         }
     }
 
@@ -195,12 +197,12 @@ contract DSCEngine is ReentrancyGuard {
     * @notice they must have more collateral value than the minimum threshold
     */
     function mintDsc(uint256 amountDscToMint) public moreThanZero(amountDscToMint) nonReentrant {
-        DscMinted[msg.sender] += amountDscToMint;
+        dscMinted[msg.sender] += amountDscToMint;
         // If they minted too much ($150 DSC > $100 ETH)
         _revertIfHealthFactorIsBroken(msg.sender);
-        bool minted = i_dsc.mint(msg.sender, amountDscToMint);
+        bool minted = iRsc.mint(msg.sender, amountDscToMint);
         if (!minted) {
-            revert DSCEngine__MintFailed();
+            revert RSCEngine__MintFailed();
         }
     }
 
@@ -236,7 +238,7 @@ contract DSCEngine is ReentrancyGuard {
         // need to check health factor of the user
         uint256 startingUserHealthFactor = _healthFactor(user);
         if (startingUserHealthFactor >= MIN_HEALTH_FACTOR) {
-            revert DSCEngine__HealthFactorOk();
+            revert RSCEngine__HealthFactorOk();
         }
         // we want to burn thier DSC "debt" and take their collateral
         // Bad user: $140 ETH, $100 DSC
@@ -251,7 +253,7 @@ contract DSCEngine is ReentrancyGuard {
 
         uint256 endingUserHealthFactor = _healthFactor(user);
         if (endingUserHealthFactor <= startingUserHealthFactor) {
-            revert DSCEngine__HealthFactorNotImproved();
+            revert RSCEngine__HealthFactorNotImproved();
         }
         _revertIfHealthFactorIsBroken(msg.sender);
     }
@@ -265,7 +267,7 @@ contract DSCEngine is ReentrancyGuard {
         view
         returns (uint256 totalDscMinted, uint256 collateralValueInUsd)
     {
-        totalDscMinted = DscMinted[user];
+        totalDscMinted = dscMinted[user];
         // we'll send 3000 as that's the amount we'll want to mint
         collateralValueInUsd = getAccountCollateralValue(user);
         // following the same example up 8000 would be returned
@@ -283,42 +285,25 @@ contract DSCEngine is ReentrancyGuard {
         if (totalDscMinted == 0) {
             return type(uint256).max;
         }
-        // totalDscMinted never get's to 0 from our code flow because of we update the DscMinted[user] with the value provided before calling the _revertIfHealthFactorIsBroken()
-        // gets 3000000000000000000000 and 8000
-        uint256 collateralAdjustedForThreshold = (collateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION; // we doing this because decimals dont work in solidity
-
-        // 8000 * 50 = 400000e18 / 100 = 4000e18 = collateralAdjustedForThreshold - this is the ammount the person with $8000 is allowed to borrow
-
-        // $150 ETH / 100 DSC (collateralInUsd / DSC)
-        //  150 * 50 = 7500 / 100 = (75 / 100) < 1 - would be liquidated (would have an health factor of 75)
+        uint256 collateralAdjustedForThreshold = (collateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
         return (collateralAdjustedForThreshold * PRECISION) / totalDscMinted;
-        // 4000 * 1000000000000000000 = 4000000000000000000000 / 3000000000000000000000 = 1.3 which is > 1 so still safe
-    }
-    // 1. Check health factot(checks if they have enough collateral)
-    // 2. Revert if they dont
-
-    function _revertIfHealthFactorIsBroken(address user) public view {
-        uint256 userHealthFactor = _healthFactor(user);
-        if (userHealthFactor < MIN_HEALTH_FACTOR) {
-            revert DSCEngine__BreaksHealthFactor(userHealthFactor);
-        }
     }
 
     /////////////////////////////////////////
-    // Public & External view Functions /////
+    // internal view Functions /////
     /////////////////////////////////////////
 
     /*
     * @dev Low-level internal function, don't call unless the function calling it is checking for health factor being broken
     */
     function _burnDsc(uint256 amountDscToBurn, address onBehalfOf, address dscFrom) internal {
-        DscMinted[onBehalfOf] -= amountDscToBurn;
-        bool success = i_dsc.transferFrom(dscFrom, address(this), amountDscToBurn);
+        dscMinted[onBehalfOf] -= amountDscToBurn;
+        bool success = iRsc.transferFrom(dscFrom, address(this), amountDscToBurn);
         // This condition would be hypothetially unreachable cos the .transferFrom would throw it's own error if transfer fails
         if (!success) {
-            revert DSCEngine__TransferFailed();
+            revert RSCEngine__TransferFailed();
         }
-        i_dsc.burn(amountDscToBurn);
+        iRsc.burn(amountDscToBurn);
     }
 
     function _redeemCollateral(address from, address to, address tokenCollateralAddress, uint256 amountCollateral)
@@ -329,17 +314,26 @@ contract DSCEngine is ReentrancyGuard {
 
         bool success = IERC20(tokenCollateralAddress).transfer(to, amountCollateral);
         if (!success) {
-            revert DSCEngine__TransferFailed();
+            revert RSCEngine__TransferFailed();
         }
     }
 
+    // @notice Checks health factor(checks if they have enough collateral)
+    // @dev Revert if they dont
+    function _revertIfHealthFactorIsBroken(address user) internal view {
+        uint256 userHealthFactor = _healthFactor(user);
+        if (userHealthFactor < MIN_HEALTH_FACTOR) {
+            revert RSCEngine__BreaksHealthFactor(userHealthFactor);
+        }
+    }
+
+    /////////////////////////////////////////
+    // Public & External view Functions /////
+    /////////////////////////////////////////
+
     function getTokenAmountFromUsd(address token, uint256 usdAmountInWei) public view returns (uint256) {
-        // price of ETH(token)
-        // $/ETH ETH??
-        // $2000 / ETH, $1000 = 0.5ETH
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeeds[token]);
-        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
-        return (usdAmountInWei * PRECISION) / (uint256(price) * ADDITIONAL_FEED_PRECISION);
+        uint256 price = sOracle.getPrice(token);
+        return (usdAmountInWei * PRECISION) / (price * ADDITIONAL_FEED_PRECISION);
     }
 
     function getAccountCollateralValue(address user) public view returns (uint256 totalCollateralValueInUsd) {
@@ -356,17 +350,8 @@ contract DSCEngine is ReentrancyGuard {
     }
 
     function getUsdValue(address token, uint256 amount) public view returns (uint256) {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeeds[token]);
-        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
-        // 1 ETH = $100
-        // The returned value from Cl will be 100 * 1e8
-        return ((uint256(price) * ADDITIONAL_FEED_PRECISION) * amount) / PRECISION;
-
-        // 1 ETH = $4000 and person has 2 ETH
-        // ($4000) 400000000000 * 10000000000 = 4000000000000000000000 * 2 = 8000000000000000000000 / 1000000000000000000 = $8000
-        // we'll be returning back 8000
-
-        // 15 * 4000
+        uint256 price = sOracle.getPrice(token);
+        return ((price * ADDITIONAL_FEED_PRECISION) * amount) / PRECISION;
     }
 
     function getAccountInformation(address user)
@@ -382,15 +367,15 @@ contract DSCEngine is ReentrancyGuard {
     }
 
     function getDscMinted(address user) external view returns (uint256) {
-        return DscMinted[user];
+        return dscMinted[user];
     }
 
     function getCollateralTokens() external view returns (address[] memory) {
         return collateralTokens;
     }
 
-    function getCollateralTokenPriceFeed(address token) external view returns (address) {
-        return priceFeeds[token];
+    function getOracle() external view returns (address) {
+        return address(sOracle);
     }
 
     function getCollateralBalanceOfUser(address user, address token) external view returns (uint256) {
