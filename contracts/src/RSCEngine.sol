@@ -86,6 +86,15 @@ contract RSCEngine is ReentrancyGuard {
     event CollateralRedeemed(
         address indexed redeemedFrom, address indexed redeemedTo, address indexed token, uint256 amount
     );
+    event DscMinted(address indexed user, uint256 amount);
+    event DscBurned(address indexed user, uint256 amount);
+    event Liquidated(
+        address indexed liquidator,
+        address indexed user,
+        address indexed collateral,
+        uint256 debtCovered,
+        uint256 collateralSeized
+    );
 
     /*//////////////
      * Modifiers
@@ -204,11 +213,13 @@ contract RSCEngine is ReentrancyGuard {
         if (!minted) {
             revert RSCEngine__MintFailed();
         }
+        emit DscMinted(msg.sender, amountDscToMint);
     }
 
     function burnDsc(uint256 amount) public moreThanZero(amount) {
         _burnDsc(amount, msg.sender, msg.sender);
         _revertIfHealthFactorIsBroken(msg.sender); // i dont think this would ever hit....
+        emit DscBurned(msg.sender, amount);
     }
 
     // If we do start nearing undercollaterization, we need someone to liquidate position
@@ -250,6 +261,7 @@ contract RSCEngine is ReentrancyGuard {
         uint256 totalCollateralToRedeem = tokenAmountFromDebtCovered + bonusCollateral;
         _redeemCollateral(user, msg.sender, collateral, totalCollateralToRedeem);
         _burnDsc(debtToCover, user, msg.sender);
+        emit Liquidated(msg.sender, user, collateral, debtToCover, totalCollateralToRedeem);
 
         uint256 endingUserHealthFactor = _healthFactor(user);
         if (endingUserHealthFactor <= startingUserHealthFactor) {
