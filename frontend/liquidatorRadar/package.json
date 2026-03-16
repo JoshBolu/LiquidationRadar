@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@somnia-chain/reactivity": "^0.1.10",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "viem": "^2.21.0"

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {RSCEngine} from "../src/RSCEngine.sol";
@@ -39,10 +39,12 @@ contract RSCEngineTest is Test {
         allowedTokens[1] = address(mockBtc);
         allowedTokens[2] = address(mockSomi);
 
-        oracle = new DemoOracle(allowedTokens);
-        oracle.setPrice(address(mockEth), PRICE_ETH_8);
-        oracle.setPrice(address(mockBtc), PRICE_BTC_8);
-        oracle.setPrice(address(mockSomi), PRICE_SOL_8);
+        uint256[] memory prices = new uint256[](3);
+        prices[0] = PRICE_ETH_8;
+        prices[1] = PRICE_BTC_8;
+        prices[2] = PRICE_SOL_8;
+
+        oracle = new DemoOracle(allowedTokens, prices);
 
         rsc = new ReactiveSomniaCoin();
         rsc.mint(liquidator, 10_000 ether);

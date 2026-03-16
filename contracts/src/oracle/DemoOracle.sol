@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.30;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IDemoOracle} from "./IDemoOracle.sol";
@@ -34,9 +34,10 @@ contract DemoOracle is IDemoOracle, Ownable {
     // Emitted whenever the price for a token is updated.
     event PriceUpdated(address indexed updater, address indexed token, uint256 oldPrice, uint256 newPrice);
 
-    constructor(address[] memory allowedTokens) Ownable(msg.sender) {
+    constructor(address[] memory allowedTokens, uint256[] memory prices) Ownable(msg.sender) {
         for (uint256 i = 0; i < allowedTokens.length; i++) {
             sAllowedTokens[allowedTokens[i]] = true;
+            sPrices[allowedTokens[i]] = prices[i];
         }
     }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
 import {DemoOracle} from "../src/oracle/DemoOracle.sol";
@@ -34,7 +34,12 @@ contract DemoOracleTest is Test {
         tokens[1] = address(mockBtc);
         tokens[2] = address(mockSomi);
 
-        oracle = new DemoOracle(tokens);
+        uint256[] memory prices = new uint256[](3);
+        prices[0] = 0; // mockEth: no initial price so test_RevertWhen_GetPrice_NotSet can use it
+        prices[1] = PRICE_BTC_8;
+        prices[2] = PRICE_SOL_8;
+
+        oracle = new DemoOracle(tokens, prices);
     }
 
     /* ---------- getPrice / getPrices ---------- */

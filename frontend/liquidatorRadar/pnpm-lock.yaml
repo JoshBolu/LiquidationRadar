@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@somnia-chain/reactivity':
+        specifier: ^0.1.10
+        version: 0.1.10(viem@2.47.2(typescript@5.9.3)(zod@4.3.6))
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -555,6 +558,11 @@ packages:
 
   '@scure/bip39@1.6.0':
     resolution: {integrity: sha512-+lF0BbLiJNwVlev4eKelw1WWLaiKXw7sSl8T6FvBlWkdX+94aGJ4o8XjUdlyhTCjd8c+B3KT3JfS8P0bLRNU6A==}
+
+  '@somnia-chain/reactivity@0.1.10':
+    resolution: {integrity: sha512-QfHeVHzcLGmE5FDS8UI6FZcHEMTXmxhuGXHJ06dwzLRoG6RwliJ55iuL2CiOf0O2b/k+Tda09fPB8B53Sk6Mww==}
+    peerDependencies:
+      viem: ~2.37.8
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -1823,6 +1831,10 @@ snapshots:
     dependencies:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
+
+  '@somnia-chain/reactivity@0.1.10(viem@2.47.2(typescript@5.9.3)(zod@4.3.6))':
+    dependencies:
+      viem: 2.47.2(typescript@5.9.3)(zod@4.3.6)
 
   '@types/babel__core@7.20.5':
     dependencies:

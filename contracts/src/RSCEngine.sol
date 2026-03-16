@@ -23,7 +23,7 @@
 // internal & private view & pure functions
 // external & public view & pure functions
 
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.30;
 
 import {ReactiveSomniaCoin} from "./ReactiveSomniaCoin.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
