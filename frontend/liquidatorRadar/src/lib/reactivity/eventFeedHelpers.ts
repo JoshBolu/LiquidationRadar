@@ -1,0 +1,78 @@
+import type { ProtocolReactiveUpdate } from "./types";
+
+function shortAddr(addr: string): string {
+  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+}
+
+function fmtUsd(wei: bigint): string {
+  return (Number(wei) / 1e18).toFixed(2);
+}
+
+// DemoOracle stores prices with 8 decimals (1e8), e.g. 2000 * 1e8 = $2,000.00
+function fmtOraclePrice(price: bigint): string {
+  return (Number(price) / 1e8).toFixed(2);
+}
+
+// Collateral amounts and RSC amounts use 18 decimals; show more precision for tokens like mBTC/mETH.
+function fmtTokenAmount(amount: bigint): string {
+  return (Number(amount) / 1e18).toFixed(5);
+}
+
+export function toEventFeedItem(update: ProtocolReactiveUpdate): {
+  id: string;
+  timestamp: string;
+  type: "MINT" | "PRICE_UPDATE" | "LIQUIDATION" | "INFO";
+  message: string;
+} {
+  const ts = new Date().toLocaleTimeString();
+  const id = `${update.event}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+  switch (update.event) {
+    case "PriceUpdated":
+      return {
+        id,
+        timestamp: ts,
+        type: "PRICE_UPDATE",
+        message: `Oracle: token ${shortAddr(update.token)} $${fmtOraclePrice(
+          update.oldPrice,
+        )} → $${fmtOraclePrice(update.newPrice)}`,
+      };
+    case "CollateralDeposited":
+      return {
+        id,
+        timestamp: ts,
+        type: "INFO",
+        message: `${shortAddr(update.user)} deposited ${fmtTokenAmount(update.amount)} collateral`,
+      };
+    case "CollateralRedeemed":
+      return {
+        id,
+        timestamp: ts,
+        type: "INFO",
+        message: `${shortAddr(update.redeemedFrom)} redeemed ${fmtTokenAmount(update.amount)} collateral`,
+      };
+    case "DscMinted":
+      return {
+        id,
+        timestamp: ts,
+        type: "MINT",
+        message: `${shortAddr(update.user)} minted $${fmtUsd(update.amount)} RSC`,
+      };
+    case "DscBurned":
+      return {
+        id,
+        timestamp: ts,
+        type: "INFO",
+        message: `${shortAddr(update.user)} burned $${fmtUsd(update.amount)} RSC`,
+      };
+    case "Liquidated":
+      return {
+        id,
+        timestamp: ts,
+        type: "LIQUIDATION",
+        message: `${shortAddr(update.liquidator)} liquidated ${shortAddr(update.user)} — debt: $${fmtUsd(update.debtCovered)}, seized: $${fmtUsd(update.collateralSeized)}`,
+      };
+    default:
+      return { id, timestamp: ts, type: "INFO", message: "Protocol event" };
+  }
+}

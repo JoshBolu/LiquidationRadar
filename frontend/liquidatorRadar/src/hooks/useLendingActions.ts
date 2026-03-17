@@ -3,6 +3,7 @@ import type { Address } from "viem";
 import { createPublicClient, createWalletClient, custom, http } from "viem";
 import { MockTokensAbi } from "../contracts-abi/MockTokens-abi";
 import { RSCEngineAbi, RSCEngineAddress } from "../contracts-abi/RSCEngine-abi";
+import { RSCAbi, RSCAddress } from "../contracts-abi/ReactiveSomniaCoin-abi";
 import { somniaTestnet } from "../data/mockTokens";
 import { useToast } from "../context/ToastContext";
 import { getMeaningfulErrorMessage } from "../utils/errorMessage";
@@ -134,6 +135,24 @@ export function useLendingActions(userAddress: Address | null) {
   const burnDsc = useCallback(
     async (amount: bigint) => {
       await runTx("burn", async (account) => {
+        // First approve RSCEngine to pull RSC from user
+        const approveGas = await publicClient.estimateContractGas({
+          address: RSCAddress as Address,
+          abi: RSCAbi,
+          functionName: "approve",
+          args: [RSCEngineAddress, amount],
+          account,
+        });
+        await getWalletClient()!.writeContract({
+          address: RSCAddress as Address,
+          abi: RSCAbi,
+          functionName: "approve",
+          args: [RSCEngineAddress, amount],
+          account,
+          gas: approveGas,
+        });
+
+        // Then call burnDsc on the engine
         const gas = await publicClient.estimateContractGas({
           address: RSCEngineAddress,
           abi: RSCEngineAbi,

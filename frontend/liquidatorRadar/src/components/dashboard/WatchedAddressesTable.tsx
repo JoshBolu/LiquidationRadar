@@ -1,11 +1,16 @@
-import SectionCard from '../shared/SectionCard';
-import type { WatchedAddressRow } from '../../types/dashboard';
+import SectionCard from "../shared/SectionCard";
+import { useAppStore } from "../../store/useAppStore";
+import type { WatchedAddressRow } from "../../types/dashboard";
 
 interface WatchedAddressesTableProps {
   rows: WatchedAddressRow[];
 }
 
+const shortAddr = (addr: string) =>
+  addr.length > 10 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
+
 const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
+  const removeWatchedAddress = useAppStore((s) => s.removeWatchedAddress);
   return (
     <SectionCard
       title="Watched Addresses"
@@ -32,7 +37,7 @@ const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
                 className="hover:bg-slate-800/30 transition-colors"
               >
                 <td className="px-4 py-4 font-mono text-slate-400">
-                  {row.address}
+                  {shortAddr(row.address)}
                 </td>
                 <td className="px-4 py-4 font-bold text-emerald-400">
                   {Math.min(row.healthFactor, 100).toFixed(2)}
@@ -46,7 +51,9 @@ const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
                 <td className="px-4 py-4 text-right">
                   <button
                     type="button"
+                    onClick={() => removeWatchedAddress(row.id)}
                     className="text-rose-500 hover:text-rose-400"
+                    aria-label="Remove"
                   >
                     ✕
                   </button>

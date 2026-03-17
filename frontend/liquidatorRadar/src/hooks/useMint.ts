@@ -17,7 +17,10 @@ const publicClient = createPublicClient({
   transport: http(),
 });
 
-export function useMint(userAddress: Address | null) {
+export function useMint(
+  userAddress: Address | null,
+  onSuccess?: () => void
+) {
   const { addToast } = useToast();
   const [pendingToken, setPendingToken] = useState<Address | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +64,7 @@ export function useMint(userAddress: Address | null) {
           gas,
         });
         await publicClient.waitForTransactionReceipt({ hash });
+        onSuccess?.();
       } catch (err) {
         const msg = getMeaningfulErrorMessage(err);
         addToast(msg, "error");
@@ -69,7 +73,7 @@ export function useMint(userAddress: Address | null) {
         setPendingToken(null);
       }
     },
-    [userAddress],
+    [userAddress, onSuccess, addToast],
   );
 
   return { mint, pendingToken, error };

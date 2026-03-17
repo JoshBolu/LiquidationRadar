@@ -15,7 +15,7 @@ import Toaster from "./components/shared/Toaster";
 import { useTokenBalances } from "./hooks/useTokenBalances";
 import { useMint } from "./hooks/useMint";
 import { usePosition } from "./hooks/usePosition";
-import { usePriceReactivity } from "./hooks/usePriceReactivity";
+import { useProtocolReactivity } from "./hooks/useProtocolReactivity";
 import { useAppStore } from "./store/useAppStore";
 import { useEffect, useMemo } from "react";
 
@@ -25,15 +25,19 @@ const AppContent = () => {
   const walletAssets = useAppStore((s) => s.walletAssets);
   const tokensLoading = useAppStore((s) => s.tokensLoading);
   const reactivityStatus = useAppStore((s) => s.reactivityStatus);
-  const watchedAddresses = useAppStore((s) => s.watchedAddresses);
   const recentLiquidations = useAppStore((s) => s.recentLiquidations);
   const eventFeedItems = useAppStore((s) => s.eventFeedItems);
   const tokenBalances = useAppStore((s) => s.tokenBalances);
 
-  useTokenBalances(address);
-  const { mint, pendingToken } = useMint(address);
+  const { refetch: refetchTokenBalances } = useTokenBalances(address);
+  const { mint, pendingToken } = useMint(address, refetchTokenBalances);
+  const watchedAddresses = useAppStore((s) => s.watchedAddresses);
   const { position: manualPosition, loading: positionLoading, refetch: refetchPosition } = usePosition(address);
-  const { update: reactiveUpdate } = usePriceReactivity(address);
+  const { positionUpdate: reactiveUpdate } = useProtocolReactivity(
+    address ?? null,
+    watchedAddresses,
+    refetchTokenBalances
+  );
 
   useEffect(() => {
     setConnectedAddress(address ?? null);
