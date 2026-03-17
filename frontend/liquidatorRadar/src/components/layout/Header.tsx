@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { createWalletClient, custom, type Address } from 'viem';
+import { createWalletClient, custom } from 'viem';
+import { useWallet } from '../../context/WalletContext';
 
 declare global {
   interface Window {
@@ -8,7 +9,7 @@ declare global {
 }
 
 const Header = () => {
-  const [address, setAddress] = useState<Address | null>(null);
+  const { address, setAddress } = useWallet();
   const [isConnecting, setIsConnecting] = useState(false);
 
   const shortAddress = address

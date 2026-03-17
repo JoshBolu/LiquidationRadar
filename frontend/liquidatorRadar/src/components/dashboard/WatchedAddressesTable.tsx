@@ -9,9 +9,12 @@ const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
   return (
     <SectionCard
       title="Watched Addresses"
-      subtitle="Manually tracked addresses added by you"
+      subtitle="Manually tracked addresses (reactivity)"
     >
       <div className="overflow-x-auto">
+        {rows.length === 0 ? (
+          <p className="text-slate-400 text-sm py-4">No watched addresses yet.</p>
+        ) : (
         <table className="w-full text-left text-sm">
           <thead className="text-xs text-slate-400 uppercase bg-brand-dark/50 border-y border-brand-border">
             <tr>
@@ -32,7 +35,7 @@ const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
                   {row.address}
                 </td>
                 <td className="px-4 py-4 font-bold text-emerald-400">
-                  {row.healthFactor.toFixed(2)}
+                  {Math.min(row.healthFactor, 100).toFixed(2)}
                 </td>
                 <td className="px-4 py-4">
                   ${row.collateralUsd.toLocaleString()}
@@ -52,6 +55,7 @@ const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
             ))}
           </tbody>
         </table>
+        )}
       </div>
     </SectionCard>
   );

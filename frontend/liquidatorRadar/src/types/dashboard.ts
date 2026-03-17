@@ -1,4 +1,19 @@
-export type RiskLevel = 'SAFE' | 'RISK' | 'LIQUIDATABLE' | 'WARNING' | 'CRITICAL';
+import type { Address } from "viem";
+
+export type RiskLevel =
+  | "SAFE"
+  | "RISK"
+  | "LIQUIDATABLE"
+  | "WARNING"
+  | "CRITICAL";
+
+export interface TokenBalance {
+  id: string;
+  address: Address;
+  symbol: string;
+  balance: string;
+  decimals: number;
+}
 
 export interface PositionSummary {
   healthFactor: number;
@@ -25,16 +40,16 @@ export interface WatchedAddressRow {
   debtUsd: number;
 }
 
-export interface BorrowerRow {
+export interface RecentLiquidation {
   id: string;
   address: string;
-  healthFactor: number;
-  collateralUsd: number;
-  debtUsd: number;
-  riskLevel: RiskLevel;
+  collateralUsd: string;
+  debtCoveredUsd: string;
+  timeLabel: string;
+  token?: string;
 }
 
-export type EventType = 'MINT' | 'PRICE_UPDATE' | 'LIQUIDATION' | 'INFO';
+export type EventType = "MINT" | "PRICE_UPDATE" | "LIQUIDATION" | "INFO";
 
 export interface EventFeedItem {
   id: string;
@@ -57,9 +72,8 @@ export interface FaucetAsset {
 }
 
 export interface ReactivityStatus {
-  status: 'LIVE' | 'PAUSED' | 'OFFLINE';
+  status: "LIVE" | "PAUSED" | "OFFLINE";
   lastBlock: number;
   mode: string;
   detail: string;
 }
-

@@ -1,42 +1,79 @@
-import MainLayout from './components/layout/MainLayout';
-import PositionCard from './components/dashboard/PositionCard';
-import WalletBalanceCard from './components/dashboard/WalletBalanceCard';
-import WatchAddressCard from './components/dashboard/WatchAddressCard';
-import ActionTabsCard from './components/dashboard/ActionTabsCard';
-import PriceLabCard from './components/dashboard/PriceLabCard';
-import FaucetCard from './components/dashboard/FaucetCard';
-import WatchedAddressesTable from './components/dashboard/WatchedAddressesTable';
-import GlobalBorrowerWatchlist from './components/dashboard/GlobalBorrowerWatchlist';
-import ReactivityStatusBar from './components/dashboard/ReactivityStatusBar';
-import EventFeedCard from './components/dashboard/EventFeedCard';
-import {
-  borrowerWatchlist,
-  eventFeedItems,
-  faucetAssets,
-  positionSummary,
-  priceAssets,
-  reactivityStatus,
-  walletAssets,
-  watchedAddresses,
-} from './data/mockData';
+import MainLayout from "./components/layout/MainLayout";
+import PositionCard from "./components/dashboard/PositionCard";
+import WalletBalanceCard from "./components/dashboard/WalletBalanceCard";
+import WatchAddressCard from "./components/dashboard/WatchAddressCard";
+import LendingActionsCard from "./components/dashboard/LendingActionsCard";
+import PriceLabCard from "./components/dashboard/PriceLabCard";
+import FaucetCard from "./components/dashboard/FaucetCard";
+import WatchedAddressesTable from "./components/dashboard/WatchedAddressesTable";
+import RecentLiquidationsCard from "./components/dashboard/RecentLiquidationsCard";
+import ReactivityStatusBar from "./components/dashboard/ReactivityStatusBar";
+import EventFeedCard from "./components/dashboard/EventFeedCard";
+import { WalletProvider, useWallet } from "./context/WalletContext";
+import { ToastProvider } from "./context/ToastContext";
+import Toaster from "./components/shared/Toaster";
+import { useTokenBalances } from "./hooks/useTokenBalances";
+import { useMint } from "./hooks/useMint";
+import { usePosition } from "./hooks/usePosition";
+import { usePriceReactivity } from "./hooks/usePriceReactivity";
+import { useAppStore } from "./store/useAppStore";
+import { useEffect, useMemo } from "react";
 
-const App = () => {
+const AppContent = () => {
+  const { address } = useWallet();
+  const setConnectedAddress = useAppStore((s) => s.setConnectedAddress);
+  const walletAssets = useAppStore((s) => s.walletAssets);
+  const tokensLoading = useAppStore((s) => s.tokensLoading);
+  const reactivityStatus = useAppStore((s) => s.reactivityStatus);
+  const watchedAddresses = useAppStore((s) => s.watchedAddresses);
+  const recentLiquidations = useAppStore((s) => s.recentLiquidations);
+  const eventFeedItems = useAppStore((s) => s.eventFeedItems);
+  const tokenBalances = useAppStore((s) => s.tokenBalances);
+
+  useTokenBalances(address);
+  const { mint, pendingToken } = useMint(address);
+  const { position: manualPosition, loading: positionLoading, refetch: refetchPosition } = usePosition(address);
+  const { update: reactiveUpdate } = usePriceReactivity(address);
+
+  useEffect(() => {
+    setConnectedAddress(address ?? null);
+  }, [address, setConnectedAddress]);
+
+  const displayPosition = useMemo(() => {
+    if (reactiveUpdate) {
+      return {
+        healthFactor: reactiveUpdate.healthFactor,
+        totalDscMinted: reactiveUpdate.totalDscMinted,
+        collateralValueInUsd: reactiveUpdate.collateralValueInUsd,
+      };
+    }
+    return manualPosition;
+  }, [reactiveUpdate, manualPosition]);
+
   return (
     <MainLayout>
+      <Toaster />
       <aside className="col-span-12 lg:col-span-4 space-y-6">
-        <PositionCard position={positionSummary} />
-        <WalletBalanceCard assets={walletAssets} />
+        <PositionCard
+          position={displayPosition}
+          loading={positionLoading && !reactiveUpdate}
+        />
+        <WalletBalanceCard assets={walletAssets} loading={tokensLoading} />
         <WatchAddressCard />
-        <ActionTabsCard />
+        <LendingActionsCard userAddress={address} onSuccess={refetchPosition} />
       </aside>
 
       <div className="col-span-12 lg:col-span-8 space-y-6">
-        <PriceLabCard assets={priceAssets} />
+        <PriceLabCard />
 
         <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-          <FaucetCard assets={faucetAssets} />
+          <FaucetCard
+            tokens={tokenBalances}
+            mint={mint}
+            pendingToken={pendingToken}
+          />
           <WatchedAddressesTable rows={watchedAddresses} />
-          <GlobalBorrowerWatchlist rows={borrowerWatchlist} />
+          <RecentLiquidationsCard rows={recentLiquidations} />
           <ReactivityStatusBar status={reactivityStatus} />
           <EventFeedCard items={eventFeedItems} />
         </div>
@@ -44,5 +81,13 @@ const App = () => {
     </MainLayout>
   );
 };
+
+const App = () => (
+  <ToastProvider>
+    <WalletProvider>
+      <AppContent />
+    </WalletProvider>
+  </ToastProvider>
+);
 
 export default App;

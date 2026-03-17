@@ -32,7 +32,9 @@ const EventFeedCard = ({ items }: EventFeedCardProps) => {
         className="space-y-3 max-h-[200px] overflow-y-auto pr-2"
         id="event-feed-container"
       >
-        {items.map((item) => (
+        {items.length === 0 ? (
+          <p className="text-slate-400 text-sm">No events yet. Feed will update via reactivity.</p>
+        ) : items.map((item) => (
           <div
             key={item.id}
             className={`flex items-start space-x-3 text-xs p-2 rounded bg-brand-dark/30 border-l-2 ${getBorderClass(
@@ -42,7 +44,7 @@ const EventFeedCard = ({ items }: EventFeedCardProps) => {
             <span className="text-slate-500 shrink-0">{item.timestamp}</span>
             <span className={getTextClass(item.type)}>{item.message}</span>
           </div>
-        ))}
+        )) }
       </div>
     </SectionCard>
   );

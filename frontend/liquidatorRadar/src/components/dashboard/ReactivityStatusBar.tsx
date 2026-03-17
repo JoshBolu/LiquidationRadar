@@ -1,10 +1,17 @@
 import type { ReactivityStatus } from '../../types/dashboard';
 
 interface ReactivityStatusBarProps {
-  status: ReactivityStatus;
+  status: ReactivityStatus | null;
 }
 
 const ReactivityStatusBar = ({ status }: ReactivityStatusBarProps) => {
+  if (!status) {
+    return (
+      <section className="bg-brand-dark border border-brand-border rounded-lg px-4 py-2 text-[11px] font-mono text-slate-500">
+        Reactivity status will appear when subscriptions are active.
+      </section>
+    );
+  }
   return (
     <section
       className="bg-brand-dark border border-brand-border rounded-lg px-4 py-2 flex items-center justify-between text-[11px] font-mono"
