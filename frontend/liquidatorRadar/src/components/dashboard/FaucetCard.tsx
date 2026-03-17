@@ -15,6 +15,10 @@ const FaucetCard = ({ tokens, mint, pendingToken }: FaucetCardProps) => {
 
   return (
     <SectionCard title="Faucet">
+      <p className="text-slate-400 text-[11px] mb-3">
+        You can mint each mock token once every 24 hours. If you&apos;ve already
+        claimed a token, please wait a full day before minting it again.
+      </p>
       {tokens.length === 0 ? (
         <p className="text-slate-400 text-sm">
           Connect your wallet to mint test tokens.

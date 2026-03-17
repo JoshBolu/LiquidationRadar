@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { parseUnits } from "viem";
+import { useEffect, useState } from "react";
+import { createPublicClient, http, parseUnits } from "viem";
 import type { Address } from "viem";
 import SectionCard from "../shared/SectionCard";
 import {
@@ -8,6 +8,8 @@ import {
   MockSomiAddress,
 } from "../../contracts-abi/MockTokens-abi";
 import { useLendingActions } from "../../hooks/useLendingActions";
+import { RSCEngineAbi, RSCEngineAddress } from "../../contracts-abi/RSCEngine-abi";
+import { somniaTestnet } from "../../data/mockTokens";
 
 type Tab = "DEPOSIT" | "MINT" | "BURN" | "REDEEM";
 
@@ -16,6 +18,11 @@ const TOKEN_OPTIONS = [
   { address: MockBtcAddress as Address, symbol: "MOCK-BTC" },
   { address: MockSomiAddress as Address, symbol: "MOCK-SOMI" },
 ];
+
+const publicClient = createPublicClient({
+  chain: somniaTestnet,
+  transport: http(),
+});
 
 interface LendingActionsCardProps {
   userAddress: Address | null;
@@ -29,9 +36,41 @@ export default function LendingActionsCard({
   const [tab, setTab] = useState<Tab>("DEPOSIT");
   const [amount, setAmount] = useState("");
   const [token, setToken] = useState<Address>(MockEthAddress as Address);
+  const [usdEstimate, setUsdEstimate] = useState<string | null>(null);
+  const [usdLoading, setUsdLoading] = useState(false);
 
   const { approve, depositCollateral, mintDsc, burnDsc, redeemCollateral, pending } =
     useLendingActions(userAddress);
+
+  useEffect(() => {
+    if (!(tab === "DEPOSIT" || tab === "REDEEM") || !amount || parseFloat(amount) <= 0) {
+      setUsdEstimate(null);
+      return;
+    }
+    let cancelled = false;
+    const run = async () => {
+      try {
+        setUsdLoading(true);
+        const amountWei = parseUnits(amount, 18);
+        const usd = await publicClient.readContract({
+          address: RSCEngineAddress,
+          abi: RSCEngineAbi,
+          functionName: "getUsdValue",
+          args: [token, amountWei],
+        });
+        if (cancelled) return;
+        setUsdEstimate((Number(usd as bigint) / 1e18).toFixed(2));
+      } catch {
+        if (!cancelled) setUsdEstimate(null);
+      } finally {
+        if (!cancelled) setUsdLoading(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [amount, tab, token]);
 
   const handleSubmit = async () => {
     if (!userAddress || !amount || parseFloat(amount) <= 0) return;
@@ -111,6 +150,15 @@ export default function LendingActionsCard({
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0"
           />
+          {(tab === "DEPOSIT" || tab === "REDEEM") && (
+            <p className="text-[11px] text-slate-400 mt-1">
+              {usdLoading
+                ? "Estimating USD value..."
+                : usdEstimate
+                ? `≈ $${usdEstimate} USD`
+                : ""}
+            </p>
+          )}
         </div>
         <button
           type="button"

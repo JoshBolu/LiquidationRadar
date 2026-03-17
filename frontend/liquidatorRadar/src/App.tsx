@@ -16,6 +16,7 @@ import { useTokenBalances } from "./hooks/useTokenBalances";
 import { useMint } from "./hooks/useMint";
 import { usePosition } from "./hooks/usePosition";
 import { useProtocolReactivity } from "./hooks/useProtocolReactivity";
+import { useCollateralBreakdown } from "./hooks/useCollateralBreakdown";
 import { useAppStore } from "./store/useAppStore";
 import { useEffect, useMemo } from "react";
 
@@ -33,10 +34,12 @@ const AppContent = () => {
   const { mint, pendingToken } = useMint(address, refetchTokenBalances);
   const watchedAddresses = useAppStore((s) => s.watchedAddresses);
   const { position: manualPosition, loading: positionLoading, refetch: refetchPosition } = usePosition(address);
+  const { tokens: collateralTokens, refetch: refetchCollateral } = useCollateralBreakdown(address);
   const { positionUpdate: reactiveUpdate } = useProtocolReactivity(
     address ?? null,
     watchedAddresses,
-    refetchTokenBalances
+    refetchTokenBalances,
+    refetchCollateral
   );
 
   useEffect(() => {
@@ -61,6 +64,7 @@ const AppContent = () => {
         <PositionCard
           position={displayPosition}
           loading={positionLoading && !reactiveUpdate}
+          collateralTokens={collateralTokens}
         />
         <WalletBalanceCard assets={walletAssets} loading={tokensLoading} />
         <WatchAddressCard />

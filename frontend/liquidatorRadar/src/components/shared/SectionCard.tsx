@@ -19,7 +19,7 @@ const SectionCard = ({
 
   return (
     <section
-      className={`bg-brand-card rounded-xl border border-brand-border ${className}`}
+      className={`bg-brand-card rounded-xl border border-brand-border min-h-[160px] ${className}`}
     >
       {hasHeader && (
         <div className="p-5 pb-0 flex items-start justify-between gap-3">

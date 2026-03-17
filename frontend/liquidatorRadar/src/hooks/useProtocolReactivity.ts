@@ -13,7 +13,8 @@ import type { Address } from "viem";
 export function useProtocolReactivity(
   connectedAddress: Address | null,
   watchedAddresses: { id: string; address: string }[],
-  onWalletBalancesChange?: () => void
+  onWalletBalancesChange?: () => void,
+  onCollateralChange?: () => void
 ) {
   const [positionUpdate, setPositionUpdate] = useState<{
     healthFactor: bigint;
@@ -78,6 +79,12 @@ export function useProtocolReactivity(
         (update.user as string).toLowerCase() === connectedAddress.toLowerCase()
       ) {
         onWalletBalancesChange?.();
+        onCollateralChange?.();
+      }
+
+      // Price updates affect USD valuation; refresh collateral breakdown for connected user
+      if (connectedAddress && update.event === "PriceUpdated") {
+        onCollateralChange?.();
       }
 
       if (connectedAddress) {
@@ -112,6 +119,7 @@ export function useProtocolReactivity(
     // resubscribe only when the set of tracked addresses changes
     watchedAddresses.map((w) => w.address.toLowerCase()).join(","),
     onWalletBalancesChange,
+    onCollateralChange,
     appendEventFeedItem,
     appendRecentLiquidation,
     updateWatchedRowsFromSnapshots,

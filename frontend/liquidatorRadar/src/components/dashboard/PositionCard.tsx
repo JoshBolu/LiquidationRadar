@@ -1,9 +1,11 @@
 import SectionCard from "../shared/SectionCard";
 import type { PositionData } from "../../hooks/usePosition";
+import type { CollateralTokenPosition } from "../../hooks/useCollateralBreakdown";
 
 interface PositionCardProps {
   position: PositionData | null;
   loading?: boolean;
+  collateralTokens?: CollateralTokenPosition[];
 }
 
 const CIRCUMFERENCE = 2 * Math.PI * 58;
@@ -52,7 +54,7 @@ function gaugePercent(hf: bigint): number {
   return Math.min(1, Math.max(0, n / 2));
 }
 
-const PositionCard = ({ position, loading = false }: PositionCardProps) => {
+const PositionCard = ({ position, loading = false, collateralTokens = [] }: PositionCardProps) => {
   if (loading) {
     return (
       <SectionCard title="Your Position">
@@ -119,6 +121,29 @@ const PositionCard = ({ position, loading = false }: PositionCardProps) => {
             <p className="text-xl font-semibold">${formatUsd(totalDscMinted)}</p>
           </div>
         </div>
+      </div>
+      <div className="border-t border-brand-border pt-4 mt-2">
+        <p className="text-xs text-slate-400 mb-2">Deposited collateral</p>
+        {collateralTokens.length === 0 ? (
+          <p className="text-xs text-slate-500">No collateral deposited yet.</p>
+        ) : (
+          <div className="space-y-1">
+            {collateralTokens.map((t) => (
+              <div
+                key={t.id}
+                className="flex justify-between text-xs text-slate-300"
+              >
+                <span className="font-mono">{t.symbol}</span>
+                <span>
+                  {t.amount}{" "}
+                  <span className="text-slate-500">
+                    (~${t.usd})
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </SectionCard>
   );
