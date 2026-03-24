@@ -55,9 +55,9 @@ Powered by **Somnia Reactivity**, enabling:
 - reduced RPC calls
 - simplified backend architecture
 
-## Automated Liquidation Engine
+## Automated Liquidation Bot
 
-A smart contract-based liquidator reacts to borrower events and triggers liquidation when health factors fall below safe thresholds.
+A reactive bot liquidator reacts that watches price change events and triggers liquidation when health factors fall below safe thresholds, watches mint/add collateral to add address to watched addresses to liquidate once defaulted.
 
 ---
 
