@@ -1,7 +1,20 @@
 import type { ProtocolReactiveUpdate } from "./types";
+import {
+  MockBtcAddress,
+  MockEthAddress,
+  MockSomiAddress,
+} from "../../contracts-abi/MockTokens-abi";
 
 function shortAddr(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+}
+
+function tokenLabel(token: string): string {
+  const t = token.toLowerCase();
+  if (t === MockEthAddress.toLowerCase()) return "mETH";
+  if (t === MockBtcAddress.toLowerCase()) return "mBTC";
+  if (t === MockSomiAddress.toLowerCase()) return "mSOMI";
+  return shortAddr(token);
 }
 
 function fmtUsd(wei: bigint): string {
@@ -33,7 +46,7 @@ export function toEventFeedItem(update: ProtocolReactiveUpdate): {
         id,
         timestamp: ts,
         type: "PRICE_UPDATE",
-        message: `Oracle: token ${shortAddr(update.token)} $${fmtOraclePrice(
+        message: `Oracle: token ${tokenLabel(update.token)} $${fmtOraclePrice(
           update.oldPrice,
         )} → $${fmtOraclePrice(update.newPrice)}`,
       };
@@ -70,7 +83,7 @@ export function toEventFeedItem(update: ProtocolReactiveUpdate): {
         id,
         timestamp: ts,
         type: "LIQUIDATION",
-        message: `${shortAddr(update.liquidator)} liquidated ${shortAddr(update.user)} — debt: $${fmtUsd(update.debtCovered)}, seized: $${fmtUsd(update.collateralSeized)}`,
+        message: `${shortAddr(update.liquidator)} liquidated ${shortAddr(update.user)} (${tokenLabel(update.collateral)}) — debt: $${fmtUsd(update.debtCovered)}, seized: $${fmtUsd(update.collateralSeized)}`,
       };
     default:
       return { id, timestamp: ts, type: "INFO", message: "Protocol event" };

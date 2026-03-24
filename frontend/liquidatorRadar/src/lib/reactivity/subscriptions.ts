@@ -2,26 +2,37 @@ import {
   encodeFunctionData,
   decodeEventLog,
   decodeFunctionResult,
-  getEventSelector,
+  keccak256,
+  toHex,
 } from "viem";
 import { getSdk } from "./client";
-import { DemoOracleAbi, DemoOracleAddress } from "../../contracts-abi/DemoOracle-abi";
-import { RSCEngineAbi, RSCEngineAddress } from "../../contracts-abi/RSCEngine-abi";
-import type { ProtocolReactiveUpdate, PositionSnapshot, PriceReactiveUpdate } from "./types";
+import {
+  DemoOracleAbi,
+  DemoOracleAddress,
+} from "../../contracts-abi/DemoOracle-abi";
+import {
+  RSCEngineAbi,
+  RSCEngineAddress,
+} from "../../contracts-abi/RSCEngine-abi";
+import type {
+  ProtocolReactiveUpdate,
+  PositionSnapshot,
+  PriceReactiveUpdate,
+} from "./types";
 
-const PriceUpdatedTopic = getEventSelector(
-  "PriceUpdated(address,address,uint256,uint256)"
+const PriceUpdatedTopic = keccak256(
+  toHex("PriceUpdated(address,address,uint256,uint256)"),
 );
-const CollateralDepositedTopic = getEventSelector(
-  "CollateralDeposited(address,address,uint256)"
+const CollateralDepositedTopic = keccak256(
+  toHex("CollateralDeposited(address,address,uint256)"),
 );
-const CollateralRedeemedTopic = getEventSelector(
-  "CollateralRedeemed(address,address,address,uint256)"
+const CollateralRedeemedTopic = keccak256(
+  toHex("CollateralRedeemed(address,address,address,uint256)"),
 );
-const DscMintedTopic = getEventSelector("DscMinted(address,uint256)");
-const DscBurnedTopic = getEventSelector("DscBurned(address,uint256)");
-const LiquidatedTopic = getEventSelector(
-  "Liquidated(address,address,address,uint256,uint256)"
+const DscMintedTopic = keccak256(toHex("DscMinted(address,uint256)"));
+const DscBurnedTopic = keccak256(toHex("DscBurned(address,uint256)"));
+const LiquidatedTopic = keccak256(
+  toHex("Liquidated(address,address,address,uint256,uint256)"),
 );
 
 type Subscription = { unsubscribe: () => Promise<unknown> };
@@ -51,7 +62,7 @@ function buildEthCalls(addresses: `0x${string}`[]) {
 
 function decodeSnapshots(
   addresses: `0x${string}`[],
-  results: `0x${string}`[]
+  results: `0x${string}`[],
 ): PositionSnapshot[] {
   const snapshots: PositionSnapshot[] = [];
   for (let i = 0; i < addresses.length; i++) {
@@ -86,7 +97,7 @@ function decodeProtocolUpdate(
   topics: `0x${string}`[],
   data: `0x${string}`,
   addresses: `0x${string}`[],
-  simulationResults: `0x${string}`[]
+  simulationResults: `0x${string}`[],
 ): ProtocolReactiveUpdate | null {
   const topic0 = topics[0];
   if (!topic0 || !data || simulationResults.length < addresses.length * 2)
@@ -100,7 +111,12 @@ function decodeProtocolUpdate(
       const decoded = decodeEventLog({
         abi: DemoOracleAbi,
         data,
-        topics: topics as [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`],
+        topics: topics as [
+          `0x${string}`,
+          `0x${string}`,
+          `0x${string}`,
+          `0x${string}`,
+        ],
       });
       if (decoded.eventName !== "PriceUpdated" || !decoded.args) return null;
       const args = decoded.args as unknown as {
@@ -123,27 +139,57 @@ function decodeProtocolUpdate(
       const decoded = decodeEventLog({
         abi: RSCEngineAbi,
         data,
-        topics: topics as [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`],
+        topics: topics as [
+          `0x${string}`,
+          `0x${string}`,
+          `0x${string}`,
+          `0x${string}`,
+        ],
       });
-      if (decoded.eventName !== "CollateralDeposited" || !decoded.args) return null;
-      const args = decoded.args as unknown as { user: `0x${string}`; token: `0x${string}`; amount: bigint };
-      return { event: "CollateralDeposited", user: args.user, token: args.token, amount: args.amount, snapshots };
+      if (decoded.eventName !== "CollateralDeposited" || !decoded.args)
+        return null;
+      const args = decoded.args as unknown as {
+        user: `0x${string}`;
+        token: `0x${string}`;
+        amount: bigint;
+      };
+      return {
+        event: "CollateralDeposited",
+        user: args.user,
+        token: args.token,
+        amount: args.amount,
+        snapshots,
+      };
     }
 
     if (topic0 === CollateralRedeemedTopic) {
       const decoded = decodeEventLog({
         abi: RSCEngineAbi,
         data,
-        topics: topics as [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`],
+        topics: topics as [
+          `0x${string}`,
+          `0x${string}`,
+          `0x${string}`,
+          `0x${string}`,
+        ],
       });
-      if (decoded.eventName !== "CollateralRedeemed" || !decoded.args) return null;
+      if (decoded.eventName !== "CollateralRedeemed" || !decoded.args)
+        return null;
       const args = decoded.args as unknown as {
         redeemedFrom: `0x${string}`;
         redeemedTo: `0x${string}`;
         token: `0x${string}`;
         amount: bigint;
       };
-      return { event: "CollateralRedeemed", user: args.redeemedFrom, redeemedFrom: args.redeemedFrom, redeemedTo: args.redeemedTo, token: args.token, amount: args.amount, snapshots };
+      return {
+        event: "CollateralRedeemed",
+        user: args.redeemedFrom,
+        redeemedFrom: args.redeemedFrom,
+        redeemedTo: args.redeemedTo,
+        token: args.token,
+        amount: args.amount,
+        snapshots,
+      };
     }
 
     if (topic0 === DscMintedTopic) {
@@ -153,8 +199,16 @@ function decodeProtocolUpdate(
         topics: topics as [`0x${string}`, `0x${string}`, `0x${string}`],
       });
       if (decoded.eventName !== "DscMinted" || !decoded.args) return null;
-      const args = decoded.args as unknown as { user: `0x${string}`; amount: bigint };
-      return { event: "DscMinted", user: args.user, amount: args.amount, snapshots };
+      const args = decoded.args as unknown as {
+        user: `0x${string}`;
+        amount: bigint;
+      };
+      return {
+        event: "DscMinted",
+        user: args.user,
+        amount: args.amount,
+        snapshots,
+      };
     }
 
     if (topic0 === DscBurnedTopic) {
@@ -164,15 +218,28 @@ function decodeProtocolUpdate(
         topics: topics as [`0x${string}`, `0x${string}`, `0x${string}`],
       });
       if (decoded.eventName !== "DscBurned" || !decoded.args) return null;
-      const args = decoded.args as unknown as { user: `0x${string}`; amount: bigint };
-      return { event: "DscBurned", user: args.user, amount: args.amount, snapshots };
+      const args = decoded.args as unknown as {
+        user: `0x${string}`;
+        amount: bigint;
+      };
+      return {
+        event: "DscBurned",
+        user: args.user,
+        amount: args.amount,
+        snapshots,
+      };
     }
 
     if (topic0 === LiquidatedTopic) {
       const decoded = decodeEventLog({
         abi: RSCEngineAbi,
         data,
-        topics: topics as [`0x${string}`, `0x${string}`, `0x${string}`, `0x${string}`],
+        topics: topics as [
+          `0x${string}`,
+          `0x${string}`,
+          `0x${string}`,
+          `0x${string}`,
+        ],
       });
       if (decoded.eventName !== "Liquidated" || !decoded.args) return null;
       const args = decoded.args as unknown as {
@@ -204,7 +271,7 @@ function decodeProtocolUpdate(
  */
 export async function subscribeToProtocolEvents(
   addresses: `0x${string}`[],
-  onUpdate: (update: ProtocolReactiveUpdate) => void
+  onUpdate: (update: ProtocolReactiveUpdate) => void,
 ): Promise<Subscription | Error> {
   const unique = [...new Set(addresses)].filter((a) => a && a.length === 42);
   if (unique.length === 0) {
@@ -233,7 +300,7 @@ export async function subscribeToProtocolEvents(
         res.topics,
         res.data,
         unique,
-        res.simulationResults
+        res.simulationResults,
       );
       if (update) onUpdate(update);
     },

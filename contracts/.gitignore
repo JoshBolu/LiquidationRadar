@@ -12,3 +12,15 @@ docs/
 
 # Dotenv file
 .env
+.env.*
+!.env.example
+
+# Forge broadcast outputs
+broadcast/
+
+# Local outputs/logs
+output.txt
+*.log
+
+# node dependencies if used
+node_modules/

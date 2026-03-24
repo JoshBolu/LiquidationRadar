@@ -2,6 +2,25 @@ import SectionCard from "../shared/SectionCard";
 import { useOraclePrices } from "../../hooks/useOraclePrices";
 import { useStepPrice } from "../../hooks/useStepPrice";
 
+function formatPrice(symbol: string, priceUsd: number): string {
+  if (symbol.toLowerCase() === "msomi") {
+    return priceUsd.toLocaleString(undefined, {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    });
+  }
+  if (priceUsd < 1) {
+    return priceUsd.toLocaleString(undefined, {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 6,
+    });
+  }
+  return priceUsd.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export default function PriceLabCard() {
   const { assets, loading, error, refetch } = useOraclePrices();
   const { stepPrice, pending } = useStepPrice(refetch);
@@ -53,7 +72,7 @@ export default function PriceLabCard() {
                   {asset.symbol}
                 </span>
                 <span className="text-lg font-mono font-bold">
-                  ${asset.priceUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ${formatPrice(asset.symbol, asset.priceUsd)}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">

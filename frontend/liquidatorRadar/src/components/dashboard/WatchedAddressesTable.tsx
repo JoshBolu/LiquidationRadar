@@ -9,6 +9,31 @@ interface WatchedAddressesTableProps {
 const shortAddr = (addr: string) =>
   addr.length > 10 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
 
+function healthStyles(hf: number) {
+  if (hf <= 0 || hf < 1) {
+    return {
+      text: "text-rose-400",
+      badge: "bg-rose-500/10 text-rose-300",
+    };
+  }
+  if (hf < 1.5) {
+    return {
+      text: "text-amber-300",
+      badge: "bg-amber-500/10 text-amber-300",
+    };
+  }
+  if (hf < 2) {
+    return {
+      text: "text-sky-300",
+      badge: "bg-sky-500/10 text-sky-300",
+    };
+  }
+  return {
+    text: "text-emerald-300",
+    badge: "bg-emerald-500/10 text-emerald-300",
+  };
+}
+
 const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
   const removeWatchedAddress = useAppStore((s) => s.removeWatchedAddress);
   return (
@@ -36,11 +61,20 @@ const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
                 key={row.id}
                 className="hover:bg-slate-800/30 transition-colors"
               >
+                {(() => {
+                  const styles = healthStyles(row.healthFactor);
+                  return (
+                    <>
                 <td className="px-4 py-4 font-mono text-slate-400">
                   {shortAddr(row.address)}
                 </td>
-                <td className="px-4 py-4 font-bold text-emerald-400">
-                  {Math.min(row.healthFactor, 100).toFixed(2)}
+                <td className="px-4 py-4">
+                  <span className={`font-bold ${styles.text}`}>
+                    {Math.min(row.healthFactor, 100).toFixed(2)}
+                  </span>
+                  <span className={`ml-2 text-[10px] px-2 py-0.5 rounded uppercase ${styles.badge}`}>
+                    {row.healthFactor < 1 ? "bad" : row.healthFactor < 1.5 ? "almost bad" : row.healthFactor < 2 ? "manageable" : "okay"}
+                  </span>
                 </td>
                 <td className="px-4 py-4">
                   ${row.collateralUsd.toLocaleString()}
@@ -58,6 +92,9 @@ const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
                     ✕
                   </button>
                 </td>
+                    </>
+                  );
+                })()}
               </tr>
             ))}
           </tbody>

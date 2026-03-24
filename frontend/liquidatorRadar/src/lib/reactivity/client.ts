@@ -2,8 +2,6 @@ import { createPublicClient, webSocket } from "viem";
 import type { SDK } from "@somnia-chain/reactivity";
 import { somniaTestnet } from "./chain";
 
-const WS_RPC = "ws://api.infra.testnet.somnia.network/ws";
-
 let sdkInstance: SDK | null = null;
 
 async function ensureBuffer(): Promise<void> {
@@ -24,7 +22,7 @@ export async function getSdk(): Promise<SDK> {
     const { SDK: SDKClass } = await import("@somnia-chain/reactivity");
     const publicClient = createPublicClient({
       chain: somniaTestnet,
-      transport: webSocket(WS_RPC),
+      transport: webSocket(),
     });
     sdkInstance = new SDKClass({ public: publicClient });
   }
