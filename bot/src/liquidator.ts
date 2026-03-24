@@ -28,7 +28,7 @@ export async function tryLiquidateUser(
       return;
     }
 
-    const totalDebt = (await engine.getDscMinted(user)) as bigint;
+    const totalDebt = (await engine.getRscMinted(user)) as bigint;
     if (totalDebt === 0n) {
       console.log(`[liquidator] skip ${user} (minted is 0)`);
       return;

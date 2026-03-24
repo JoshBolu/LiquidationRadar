@@ -4,7 +4,7 @@ import type { Address } from "viem";
 export type PositionSnapshot = {
   address: Address;
   healthFactor: bigint;
-  totalDscMinted: bigint;
+  totalRscMinted: bigint;
   collateralValueInUsd: bigint;
 };
 
@@ -38,13 +38,13 @@ export type CollateralRedeemedUpdate = EngineEventBase & {
   amount: bigint;
 };
 
-export type DscMintedUpdate = EngineEventBase & {
-  event: "DscMinted";
+export type RscMintedUpdate = EngineEventBase & {
+  event: "RscMinted";
   amount: bigint;
 };
 
-export type DscBurnedUpdate = EngineEventBase & {
-  event: "DscBurned";
+export type RscBurnedUpdate = EngineEventBase & {
+  event: "RscBurned";
   amount: bigint;
 };
 
@@ -60,6 +60,6 @@ export type ProtocolReactiveUpdate =
   | PriceReactiveUpdate
   | CollateralDepositedUpdate
   | CollateralRedeemedUpdate
-  | DscMintedUpdate
-  | DscBurnedUpdate
+  | RscMintedUpdate
+  | RscBurnedUpdate
   | LiquidatedUpdate;

@@ -8,7 +8,7 @@ async function startupCleanup(users: Set<string>): Promise<void> {
   const staleUsers: string[] = [];
 
   for (const user of users) {
-    const minted = (await engine.getDscMinted(user)) as bigint;
+    const minted = (await engine.getRscMinted(user)) as bigint;
     if (minted === 0n) {
       staleUsers.push(user);
     }

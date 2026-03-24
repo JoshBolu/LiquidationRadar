@@ -50,7 +50,7 @@ const AppContent = () => {
     if (reactiveUpdate) {
       return {
         healthFactor: reactiveUpdate.healthFactor,
-        totalDscMinted: reactiveUpdate.totalDscMinted,
+        totalRscMinted: reactiveUpdate.totalRscMinted,
         collateralValueInUsd: reactiveUpdate.collateralValueInUsd,
       };
     }

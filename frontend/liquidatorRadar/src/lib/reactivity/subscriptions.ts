@@ -29,8 +29,8 @@ const CollateralDepositedTopic = keccak256(
 const CollateralRedeemedTopic = keccak256(
   toHex("CollateralRedeemed(address,address,address,uint256)"),
 );
-const DscMintedTopic = keccak256(toHex("DscMinted(address,uint256)"));
-const DscBurnedTopic = keccak256(toHex("DscBurned(address,uint256)"));
+const RscMintedTopic = keccak256(toHex("RscMinted(address,uint256)"));
+const RscBurnedTopic = keccak256(toHex("RscBurned(address,uint256)"));
 const LiquidatedTopic = keccak256(
   toHex("Liquidated(address,address,address,uint256,uint256)"),
 );
@@ -83,7 +83,7 @@ function decodeSnapshots(
       snapshots.push({
         address: addresses[i],
         healthFactor,
-        totalDscMinted: accountInfo[0],
+        totalRscMinted: accountInfo[0],
         collateralValueInUsd: accountInfo[1],
       });
     } catch {
@@ -192,38 +192,38 @@ function decodeProtocolUpdate(
       };
     }
 
-    if (topic0 === DscMintedTopic) {
+    if (topic0 === RscMintedTopic) {
       const decoded = decodeEventLog({
         abi: RSCEngineAbi,
         data,
         topics: topics as [`0x${string}`, `0x${string}`, `0x${string}`],
       });
-      if (decoded.eventName !== "DscMinted" || !decoded.args) return null;
+      if (decoded.eventName !== "RscMinted" || !decoded.args) return null;
       const args = decoded.args as unknown as {
         user: `0x${string}`;
         amount: bigint;
       };
       return {
-        event: "DscMinted",
+        event: "RscMinted",
         user: args.user,
         amount: args.amount,
         snapshots,
       };
     }
 
-    if (topic0 === DscBurnedTopic) {
+    if (topic0 === RscBurnedTopic) {
       const decoded = decodeEventLog({
         abi: RSCEngineAbi,
         data,
         topics: topics as [`0x${string}`, `0x${string}`, `0x${string}`],
       });
-      if (decoded.eventName !== "DscBurned" || !decoded.args) return null;
+      if (decoded.eventName !== "RscBurned" || !decoded.args) return null;
       const args = decoded.args as unknown as {
         user: `0x${string}`;
         amount: bigint;
       };
       return {
-        event: "DscBurned",
+        event: "RscBurned",
         user: args.user,
         amount: args.amount,
         snapshots,

@@ -31,11 +31,11 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /*
  * @title ReactiveSomniaCoin
  * @author Suyi-Ajayi Boluwatife
- * Collateral: Exogenous (ETH & BTC)
+ * Collateral: Exogenous (mBTC, mETH, mSOMI)
  * Minting: Algorithmic
  * Relative Stability: pegged to USD
  *
- * This is the contract meant to be governed by DSCEngine. This contract is just the ERC20 implementation of our stablecoin system
+ * This is the contract meant to be governed by RSCEngine. This contract is just the ERC20 implementation of our stablecoin system
  */
 contract ReactiveSomniaCoin is ERC20Burnable, Ownable {
     error ReactiveSomniaCoin__MustBeMoreThanZero();

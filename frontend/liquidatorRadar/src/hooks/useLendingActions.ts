@@ -109,20 +109,20 @@ export function useLendingActions(userAddress: Address | null) {
     [runTx]
   );
 
-  const mintDsc = useCallback(
+  const mintRsc = useCallback(
     async (amount: bigint) => {
       await runTx("mint", async (account) => {
         const gas = await publicClient.estimateContractGas({
           address: RSCEngineAddress,
           abi: RSCEngineAbi,
-          functionName: "mintDsc",
+          functionName: "mintRsc",
           args: [amount],
           account,
         });
         return getWalletClient()!.writeContract({
           address: RSCEngineAddress,
           abi: RSCEngineAbi,
-          functionName: "mintDsc",
+          functionName: "mintRsc",
           args: [amount],
           account,
           gas,
@@ -132,7 +132,7 @@ export function useLendingActions(userAddress: Address | null) {
     [runTx]
   );
 
-  const burnDsc = useCallback(
+  const burnRsc = useCallback(
     async (amount: bigint) => {
       await runTx("burn", async (account) => {
         // First approve RSCEngine to pull RSC from user
@@ -152,18 +152,18 @@ export function useLendingActions(userAddress: Address | null) {
           gas: approveGas,
         });
 
-        // Then call burnDsc on the engine
+        // Then call burnRsc on the engine
         const gas = await publicClient.estimateContractGas({
           address: RSCEngineAddress,
           abi: RSCEngineAbi,
-          functionName: "burnDsc",
+          functionName: "burnRsc",
           args: [amount],
           account,
         });
         return getWalletClient()!.writeContract({
           address: RSCEngineAddress,
           abi: RSCEngineAbi,
-          functionName: "burnDsc",
+          functionName: "burnRsc",
           args: [amount],
           account,
           gas,
@@ -199,8 +199,8 @@ export function useLendingActions(userAddress: Address | null) {
   return {
     approve,
     depositCollateral,
-    mintDsc,
-    burnDsc,
+    mintRsc,
+    burnRsc,
     redeemCollateral,
     pending,
   };

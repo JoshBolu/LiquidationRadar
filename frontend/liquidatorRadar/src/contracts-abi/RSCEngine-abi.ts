@@ -1,36 +1,18 @@
-export const RSCEngineAddress = "0x6572cb6b3b33e8f3f55460dd94b36d4f2c8b32f1";
+export const RSCEngineAddress = "0x1dF5cEa012Eb727fc31b53B99606f08ca1F1827a";
 export const RSCEngineAbi = [
   {
     type: "constructor",
     inputs: [
-      {
-        name: "tokenAddresses",
-        type: "address[]",
-        internalType: "address[]",
-      },
-      {
-        name: "oracleAddress",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "rscAddress",
-        type: "address",
-        internalType: "address",
-      },
+      { name: "tokenAddresses", type: "address[]", internalType: "address[]" },
+      { name: "oracleAddress", type: "address", internalType: "address" },
+      { name: "rscAddress", type: "address", internalType: "address" },
     ],
     stateMutability: "nonpayable",
   },
   {
     type: "function",
-    name: "burnDsc",
-    inputs: [
-      {
-        name: "amount",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+    name: "burnRsc",
+    inputs: [{ name: "amount", type: "uint256", internalType: "uint256" }],
     outputs: [],
     stateMutability: "nonpayable",
   },
@@ -43,34 +25,22 @@ export const RSCEngineAbi = [
         type: "address",
         internalType: "address",
       },
-      {
-        name: "amountCollateral",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "amountCollateral", type: "uint256", internalType: "uint256" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
   },
   {
     type: "function",
-    name: "depositCollateralAndMintDsc",
+    name: "depositCollateralAndMintRsc",
     inputs: [
       {
         name: "tokenCollateralAddress",
         type: "address",
         internalType: "address",
       },
-      {
-        name: "amountCollateral",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "amountDscToMint",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "amountCollateral", type: "uint256", internalType: "uint256" },
+      { name: "amountRscToMint", type: "uint256", internalType: "uint256" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
@@ -78,13 +48,7 @@ export const RSCEngineAbi = [
   {
     type: "function",
     name: "getAccountCollateralValue",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
+    inputs: [{ name: "user", type: "address", internalType: "address" }],
     outputs: [
       {
         name: "totalCollateralValueInUsd",
@@ -97,19 +61,9 @@ export const RSCEngineAbi = [
   {
     type: "function",
     name: "getAccountInformation",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
+    inputs: [{ name: "user", type: "address", internalType: "address" }],
     outputs: [
-      {
-        name: "totalDscMinted",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "totalRscMinted", type: "uint256", internalType: "uint256" },
       {
         name: "collateralValueInUsd",
         type: "uint256",
@@ -122,74 +76,25 @@ export const RSCEngineAbi = [
     type: "function",
     name: "getCollateralBalanceOfUser",
     inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "token",
-        type: "address",
-        internalType: "address",
-      },
+      { name: "user", type: "address", internalType: "address" },
+      { name: "token", type: "address", internalType: "address" },
     ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
   },
   {
     type: "function",
     name: "getCollateralTokens",
     inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address[]",
-        internalType: "address[]",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getDscMinted",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+    outputs: [{ name: "", type: "address[]", internalType: "address[]" }],
     stateMutability: "view",
   },
   {
     type: "function",
     name: "getHealthFactor",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
+    inputs: [{ name: "user", type: "address", internalType: "address" }],
     outputs: [
-      {
-        name: "healthFactor",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "healthFactor", type: "uint256", internalType: "uint256" },
     ],
     stateMutability: "view",
   },
@@ -197,95 +102,52 @@ export const RSCEngineAbi = [
     type: "function",
     name: "getOracle",
     inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "address",
-        internalType: "address",
-      },
-    ],
+    outputs: [{ name: "", type: "address", internalType: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getRscMinted",
+    inputs: [{ name: "user", type: "address", internalType: "address" }],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
   },
   {
     type: "function",
     name: "getTokenAmountFromUsd",
     inputs: [
-      {
-        name: "token",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "usdAmountInWei",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "token", type: "address", internalType: "address" },
+      { name: "usdAmountInWei", type: "uint256", internalType: "uint256" },
     ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
   },
   {
     type: "function",
     name: "getUsdValue",
     inputs: [
-      {
-        name: "token",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "amount",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "token", type: "address", internalType: "address" },
+      { name: "amount", type: "uint256", internalType: "uint256" },
     ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
   },
   {
     type: "function",
     name: "liquidate",
     inputs: [
-      {
-        name: "collateral",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "debtToCover",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "collateral", type: "address", internalType: "address" },
+      { name: "user", type: "address", internalType: "address" },
+      { name: "debtToCover", type: "uint256", internalType: "uint256" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
   },
   {
     type: "function",
-    name: "mintDsc",
+    name: "mintRsc",
     inputs: [
-      {
-        name: "amountDscToMint",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "amountRscToMint", type: "uint256", internalType: "uint256" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
@@ -299,34 +161,22 @@ export const RSCEngineAbi = [
         type: "address",
         internalType: "address",
       },
-      {
-        name: "amountCollateral",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "amountCollateral", type: "uint256", internalType: "uint256" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
   },
   {
     type: "function",
-    name: "redeemCollateralForDsc",
+    name: "redeemCollateralForRsc",
     inputs: [
       {
         name: "tokenCollateralAddress",
         type: "address",
         internalType: "address",
       },
-      {
-        name: "amountCollateral",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "amountDscToBurn",
-        type: "uint256",
-        internalType: "uint256",
-      },
+      { name: "amountCollateral", type: "uint256", internalType: "uint256" },
+      { name: "amountRscToBurn", type: "uint256", internalType: "uint256" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
@@ -335,12 +185,7 @@ export const RSCEngineAbi = [
     type: "event",
     name: "CollateralDeposited",
     inputs: [
-      {
-        name: "user",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
+      { name: "user", type: "address", indexed: true, internalType: "address" },
       {
         name: "token",
         type: "address",
@@ -389,44 +234,6 @@ export const RSCEngineAbi = [
   },
   {
     type: "event",
-    name: "DscBurned",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-      {
-        name: "amount",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
-    name: "DscMinted",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-      {
-        name: "amount",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
     name: "Liquidated",
     inputs: [
       {
@@ -435,12 +242,7 @@ export const RSCEngineAbi = [
         indexed: true,
         internalType: "address",
       },
-      {
-        name: "user",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
+      { name: "user", type: "address", indexed: true, internalType: "address" },
       {
         name: "collateral",
         type: "address",
@@ -463,54 +265,46 @@ export const RSCEngineAbi = [
     anonymous: false,
   },
   {
-    type: "error",
-    name: "RSCEngine__BreaksHealthFactor",
+    type: "event",
+    name: "RscBurned",
     inputs: [
+      { name: "user", type: "address", indexed: true, internalType: "address" },
       {
-        name: "userHealthFactor",
+        name: "amount",
         type: "uint256",
+        indexed: false,
         internalType: "uint256",
       },
     ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "RscMinted",
+    inputs: [
+      { name: "user", type: "address", indexed: true, internalType: "address" },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
   },
   {
     type: "error",
-    name: "RSCEngine__HealthFactorNotImproved",
-    inputs: [],
+    name: "RSCEngine__BreaksHealthFactor",
+    inputs: [
+      { name: "userHealthFactor", type: "uint256", internalType: "uint256" },
+    ],
   },
-  {
-    type: "error",
-    name: "RSCEngine__HealthFactorOk",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "RSCEngine__MintFailed",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "RSCEngine__NeedsMoreThanZero",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "RSCEngine__NotAllowedToken",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "RSCEngine__OracleCannotBeZero",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "RSCEngine__TransferFailed",
-    inputs: [],
-  },
-  {
-    type: "error",
-    name: "ReentrancyGuardReentrantCall",
-    inputs: [],
-  },
+  { type: "error", name: "RSCEngine__HealthFactorNotImproved", inputs: [] },
+  { type: "error", name: "RSCEngine__HealthFactorOk", inputs: [] },
+  { type: "error", name: "RSCEngine__MintFailed", inputs: [] },
+  { type: "error", name: "RSCEngine__NeedsMoreThanZero", inputs: [] },
+  { type: "error", name: "RSCEngine__NotAllowedToken", inputs: [] },
+  { type: "error", name: "RSCEngine__OracleCannotBeZero", inputs: [] },
+  { type: "error", name: "RSCEngine__TransferFailed", inputs: [] },
+  { type: "error", name: "ReentrancyGuardReentrantCall", inputs: [] },
 ];

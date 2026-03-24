@@ -55,12 +55,12 @@ const WatchAddressCard = () => {
           args: [addr],
         }),
       ]);
-      const [totalDscMinted, collateralValueInUsd] = accountInfo as [bigint, bigint];
+      const [totalRscMinted, collateralValueInUsd] = accountInfo as [bigint, bigint];
       updateWatchedRowsFromSnapshots([
         {
           address: addr as `0x${string}`,
           healthFactor: healthFactor as bigint,
-          totalDscMinted,
+          totalRscMinted,
           collateralValueInUsd,
         },
       ]);

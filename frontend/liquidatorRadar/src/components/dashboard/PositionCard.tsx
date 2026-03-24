@@ -70,7 +70,7 @@ const PositionCard = ({ position, loading = false, collateralTokens = [] }: Posi
     );
   }
 
-  const { healthFactor, totalDscMinted, collateralValueInUsd } = position;
+  const { healthFactor, totalRscMinted, collateralValueInUsd } = position;
   const hfNum = Number(healthFactor) / 1e18;
   const displayHf = Math.min(hfNum, 100); // Cap at 100 when no debt = "safe"
   const colors = healthColors(healthFactor);
@@ -118,7 +118,7 @@ const PositionCard = ({ position, loading = false, collateralTokens = [] }: Posi
           </div>
           <div>
             <p className="text-xs text-slate-400">Debt (RSC)</p>
-            <p className="text-xl font-semibold">${formatUsd(totalDscMinted)}</p>
+            <p className="text-xl font-semibold">${formatUsd(totalRscMinted)}</p>
           </div>
         </div>
       </div>

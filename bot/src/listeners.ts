@@ -16,8 +16,8 @@ import { RSCEngineAbi } from "../abi/RSCEngine-abi";
 const collateralDepositedTopic = keccak256(
   toHex("CollateralDeposited(address,address,uint256)"),
 );
-const dscMintedTopic = keccak256(toHex("DscMinted(address,uint256)"));
-const dscBurnedTopic = keccak256(toHex("DscBurned(address,uint256)"));
+const rscMintedTopic = keccak256(toHex("RscMinted(address,uint256)"));
+const rscBurnedTopic = keccak256(toHex("RscBurned(address,uint256)"));
 const priceUpdatedTopic = keccak256(
   toHex("PriceUpdated(address,address,uint256,uint256)"),
 );
@@ -43,7 +43,7 @@ async function handleBurnCleanup(
   user: string,
 ): Promise<void> {
   const normalized = user.toLowerCase();
-  const minted = (await engine.getDscMinted(normalized)) as bigint;
+  const minted = (await engine.getRscMinted(normalized)) as bigint;
 
   if (minted === 0n && users.delete(normalized)) {
     saveUsers(users);
@@ -81,7 +81,7 @@ export async function startListeners(users: Set<string>): Promise<void> {
       }
       const eventTopics = topics as [`0x${string}`, ...`0x${string}`[]];
 
-      if (topic0 === collateralDepositedTopic || topic0 === dscMintedTopic) {
+      if (topic0 === collateralDepositedTopic || topic0 === rscMintedTopic) {
         try {
           const decoded = decodeEventLog({
             abi: RSCEngineAbi,
@@ -90,7 +90,7 @@ export async function startListeners(users: Set<string>): Promise<void> {
           });
           if (
             decoded.eventName === "CollateralDeposited" ||
-            decoded.eventName === "DscMinted"
+            decoded.eventName === "RscMinted"
           ) {
             const user = String((decoded.args as { user?: string }).user ?? "");
             if (user) {
@@ -103,14 +103,14 @@ export async function startListeners(users: Set<string>): Promise<void> {
         return;
       }
 
-      if (topic0 === dscBurnedTopic) {
+      if (topic0 === rscBurnedTopic) {
         try {
           const decoded = decodeEventLog({
             abi: RSCEngineAbi,
             data,
             topics: eventTopics,
           });
-          if (decoded.eventName === "DscBurned") {
+          if (decoded.eventName === "RscBurned") {
             const user = String((decoded.args as { user?: string }).user ?? "");
             if (user) {
               void handleBurnCleanup(users, user).catch((error) => {
@@ -165,6 +165,6 @@ export async function startListeners(users: Set<string>): Promise<void> {
   }
 
   console.log(
-    "[listeners] subscribed to CollateralDeposited, DscMinted, DscBurned, PriceUpdated",
+    "[listeners] subscribed to CollateralDeposited, RscMinted, RscBurned, PriceUpdated",
   );
 }

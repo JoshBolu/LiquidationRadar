@@ -8,7 +8,7 @@ import { getMeaningfulErrorMessage } from "../utils/errorMessage";
 
 export interface PositionData {
   healthFactor: bigint;
-  totalDscMinted: bigint;
+  totalRscMinted: bigint;
   collateralValueInUsd: bigint;
 }
 
@@ -46,10 +46,10 @@ export function usePosition(userAddress: Address | null) {
           args: [userAddress],
         }),
       ]);
-      const [totalDscMinted, collateralValueInUsd] = accountInfo as [bigint, bigint];
+      const [totalRscMinted, collateralValueInUsd] = accountInfo as [bigint, bigint];
       setPosition({
         healthFactor: healthFactor as bigint,
-        totalDscMinted,
+        totalRscMinted,
         collateralValueInUsd,
       });
     } catch (err) {

@@ -31,20 +31,19 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IDemoOracle} from "./oracle/IDemoOracle.sol";
 
 /*
- * @title DCSEngine
+ * @title RCSEngine
  * @author Suyi-Ajayi Boluwatife
  *
- * The System is designed to be as minimal as possible, and have the tokens maintain a 1 token == $1 peg.
+ * The System is designed to be as minimal and have the tokens maintain a 1 token == $1 peg.
  * This stabecoins has the properties:
  * - Exogenous Collateral
  * - Dollar pegged
  * - ALgorithmically stable
  * It is similar to DAI if DAI had no governance, no fee, and was only backed by WETH and WBTC
  *
- * Our DSC system should always be "overcollateralized". At no point, should the value of all collateral <= the $ backed value of all the DSC
+ * Our RSC system should always be "overcollateralized". At no point, should the value of all collateral <= the $ backed value of all the RSC
  *
- * @notice THis contract is the core of the DSC system. It handles all the logic for mining and redeeming DSC, as well as depositing & withdrawing collateral.
- * @notice This contract is VERY loosely based on the MakerDAO DSS (DAI) sytem
+ * @notice This contract is the core of the RSC system. It handles all the logic for minting and redeeming RSC, as well as depositing & withdrawing collateral.
  */
 
 contract RSCEngine is ReentrancyGuard {
@@ -73,7 +72,7 @@ contract RSCEngine is ReentrancyGuard {
     IDemoOracle private sOracle;
     mapping(address token => bool) private sIsCollateralToken;
     mapping(address user => mapping(address token => uint256 amount)) private collateralDeposit;
-    mapping(address user => uint256 amountDscMinted) private dscMinted;
+    mapping(address user => uint256 amountRscMinted) private rscMinted;
 
     address[] private collateralTokens;
 
@@ -86,8 +85,8 @@ contract RSCEngine is ReentrancyGuard {
     event CollateralRedeemed(
         address indexed redeemedFrom, address indexed redeemedTo, address indexed token, uint256 amount
     );
-    event DscMinted(address indexed user, uint256 amount);
-    event DscBurned(address indexed user, uint256 amount);
+    event RscMinted(address indexed user, uint256 amount);
+    event RscBurned(address indexed user, uint256 amount);
     event Liquidated(
         address indexed liquidator,
         address indexed user,
@@ -144,16 +143,16 @@ contract RSCEngine is ReentrancyGuard {
     /*
     * @param tokenCollateralAddress The address of token to deposit as collateral
     * @param amountCollateral The amount of collateral to deposit
-    * @param amountDscToMint the amount of decentralized stablecoin to mint
-    * @notice this function will deposit your collateral and mint dsc in one transaction
+    * @param amountRscToMint the amount of reactive stablecoin to mint
+    * @notice this function will deposit your collateral and mint RSC in one transaction
     */
-    function depositCollateralAndMintDsc(
+    function depositCollateralAndMintRsc(
         address tokenCollateralAddress,
         uint256 amountCollateral,
-        uint256 amountDscToMint
+        uint256 amountRscToMint
     ) external {
         depositCollateral(tokenCollateralAddress, amountCollateral);
-        mintDsc(amountDscToMint);
+        mintRsc(amountRscToMint);
     }
 
     /*
@@ -178,13 +177,13 @@ contract RSCEngine is ReentrancyGuard {
     /*
     * @param tokenCollateralAddress The collateral address to redeem
     * @param amountCollateral The amount of collateral to redeem
-    * @param amountDscTOBurn The amount of DSC to burn
-    * This function burns DSC and redeems underlying collateral in one transaction
+    * @param amountRscToBurn The amount of RSC to burn
+    * This function burns RSC and redeems underlying collateral in one transaction
     */
-    function redeemCollateralForDsc(address tokenCollateralAddress, uint256 amountCollateral, uint256 amountDscToBurn)
+    function redeemCollateralForRsc(address tokenCollateralAddress, uint256 amountCollateral, uint256 amountRscToBurn)
         external
     {
-        burnDsc(amountDscToBurn);
+        burnRsc(amountRscToBurn);
         redeemCollateral(tokenCollateralAddress, amountCollateral);
         // redeemCOllateral already checks health factor
     }
@@ -202,39 +201,39 @@ contract RSCEngine is ReentrancyGuard {
 
     /*
     * @notice follows CEI
-    * @param amountDscToMint The amount of decentralized stablecoins to mint
+    * @param amountRscToMint The amount of reactive stablecoins to mint
     * @notice they must have more collateral value than the minimum threshold
     */
-    function mintDsc(uint256 amountDscToMint) public moreThanZero(amountDscToMint) nonReentrant {
-        dscMinted[msg.sender] += amountDscToMint;
-        // If they minted too much ($150 DSC > $100 ETH)
+    function mintRsc(uint256 amountRscToMint) public moreThanZero(amountRscToMint) nonReentrant {
+        rscMinted[msg.sender] += amountRscToMint;
+        // If they minted too much ($150 RSC > $100 ETH)
         _revertIfHealthFactorIsBroken(msg.sender);
-        bool minted = iRsc.mint(msg.sender, amountDscToMint);
+        bool minted = iRsc.mint(msg.sender, amountRscToMint);
         if (!minted) {
             revert RSCEngine__MintFailed();
         }
-        emit DscMinted(msg.sender, amountDscToMint);
+        emit RscMinted(msg.sender, amountRscToMint);
     }
 
-    function burnDsc(uint256 amount) public moreThanZero(amount) {
-        _burnDsc(amount, msg.sender, msg.sender);
+    function burnRsc(uint256 amount) public moreThanZero(amount) {
+        _burnRsc(amount, msg.sender, msg.sender);
         _revertIfHealthFactorIsBroken(msg.sender); // i dont think this would ever hit....
-        emit DscBurned(msg.sender, amount);
+        emit RscBurned(msg.sender, amount);
     }
 
     // If we do start nearing undercollaterization, we need someone to liquidate position
-    // $100 ETH backing and burns off the $50 DSC
-    // $20 ETH back $50 DSC => DSC isn't worth $1!!!
+    // $100 ETH backing and burns off the $50 RSC
+    // $20 ETH back $50 RSC => RSC isn't worth $1!!!
 
-    // $75 backing $50 DSC
-    // Liquidator takes $75 backing and burns off the $50 DSC
+    // $75 backing $50 RSC
+    // Liquidator takes $75 backing and burns off the $50 RSC
 
     // If someone is almost undercollaterized, we will pay you to liquidate them from their collateral
 
     /*
     * @param collateral The erc20 collateral adddress to liquidate from the user
     * @param user The user who has broken the health factor. Their _healthFactor should be below MIN_HEALTH_FACTOR
-    * @param debtToCover The amount of DSC you want to burn to improve the users health factor
+    * @param debtToCover The amount of RSC you want to burn to improve the users health factor
     * @notice You can partially liquidate a user
     * @notice You will get liquidation bonus for liquidating the user
     * @notice This function working assumes protocol will be roughtly 200% overcollaterized in order for this to work
@@ -251,16 +250,16 @@ contract RSCEngine is ReentrancyGuard {
         if (startingUserHealthFactor >= MIN_HEALTH_FACTOR) {
             revert RSCEngine__HealthFactorOk();
         }
-        // we want to burn thier DSC "debt" and take their collateral
-        // Bad user: $140 ETH, $100 DSC
+        // we want to burn their RSC debt and take their collateral
+        // Bad user: $140 ETH, $100 RSC
         // debtToCover = $100
-        // $100 of DSC == ??? ETH?
+        // $100 of RSC == ??? ETH?
         uint256 tokenAmountFromDebtCovered = getTokenAmountFromUsd(collateral, debtToCover);
-        // and give them 10% bonus, $110 of WETH for $100 DSC
+        // and give them 10% bonus, $110 of WETH for $100 RSC
         uint256 bonusCollateral = (tokenAmountFromDebtCovered * LIQUIDATOR_BONUS) / LIQUIDATION_PRECISION;
         uint256 totalCollateralToRedeem = tokenAmountFromDebtCovered + bonusCollateral;
         _redeemCollateral(user, msg.sender, collateral, totalCollateralToRedeem);
-        _burnDsc(debtToCover, user, msg.sender);
+        _burnRsc(debtToCover, user, msg.sender);
         emit Liquidated(msg.sender, user, collateral, debtToCover, totalCollateralToRedeem);
 
         uint256 endingUserHealthFactor = _healthFactor(user);
@@ -277,9 +276,9 @@ contract RSCEngine is ReentrancyGuard {
     function _getAccountInformation(address user)
         private
         view
-        returns (uint256 totalDscMinted, uint256 collateralValueInUsd)
+        returns (uint256 totalRscMinted, uint256 collateralValueInUsd)
     {
-        totalDscMinted = dscMinted[user];
+        totalRscMinted = rscMinted[user];
         // we'll send 3000 as that's the amount we'll want to mint
         collateralValueInUsd = getAccountCollateralValue(user);
         // following the same example up 8000 would be returned
@@ -290,15 +289,15 @@ contract RSCEngine is ReentrancyGuard {
     * if a user goes bellow 1, then they can get liquidated
     */
     function _healthFactor(address user) private view returns (uint256) {
-        // total DSC minted
+        // total RSC minted
         // total collateral value
-        (uint256 totalDscMinted, uint256 collateralValueInUsd) = _getAccountInformation(user);
-        // give user infinite health factor if he has minted 0 DSC
-        if (totalDscMinted == 0) {
+        (uint256 totalRscMinted, uint256 collateralValueInUsd) = _getAccountInformation(user);
+        // give user infinite health factor if they have minted 0 RSC
+        if (totalRscMinted == 0) {
             return type(uint256).max;
         }
         uint256 collateralAdjustedForThreshold = (collateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
-        return (collateralAdjustedForThreshold * PRECISION) / totalDscMinted;
+        return (collateralAdjustedForThreshold * PRECISION) / totalRscMinted;
     }
 
     /////////////////////////////////////////
@@ -308,14 +307,14 @@ contract RSCEngine is ReentrancyGuard {
     /*
     * @dev Low-level internal function, don't call unless the function calling it is checking for health factor being broken
     */
-    function _burnDsc(uint256 amountDscToBurn, address onBehalfOf, address dscFrom) internal {
-        dscMinted[onBehalfOf] -= amountDscToBurn;
-        bool success = iRsc.transferFrom(dscFrom, address(this), amountDscToBurn);
+    function _burnRsc(uint256 amountRscToBurn, address onBehalfOf, address rscFrom) internal {
+        rscMinted[onBehalfOf] -= amountRscToBurn;
+        bool success = iRsc.transferFrom(rscFrom, address(this), amountRscToBurn);
         // This condition would be hypothetially unreachable cos the .transferFrom would throw it's own error if transfer fails
         if (!success) {
             revert RSCEngine__TransferFailed();
         }
-        iRsc.burn(amountDscToBurn);
+        iRsc.burn(amountRscToBurn);
     }
 
     function _redeemCollateral(address from, address to, address tokenCollateralAddress, uint256 amountCollateral)
@@ -369,17 +368,17 @@ contract RSCEngine is ReentrancyGuard {
     function getAccountInformation(address user)
         external
         view
-        returns (uint256 totalDscMinted, uint256 collateralValueInUsd)
+        returns (uint256 totalRscMinted, uint256 collateralValueInUsd)
     {
-        (totalDscMinted, collateralValueInUsd) = _getAccountInformation(user);
+        (totalRscMinted, collateralValueInUsd) = _getAccountInformation(user);
     }
 
     function getHealthFactor(address user) external view returns (uint256 healthFactor) {
         healthFactor = _healthFactor(user);
     }
 
-    function getDscMinted(address user) external view returns (uint256) {
-        return dscMinted[user];
+    function getRscMinted(address user) external view returns (uint256) {
+        return rscMinted[user];
     }
 
     function getCollateralTokens() external view returns (address[] memory) {

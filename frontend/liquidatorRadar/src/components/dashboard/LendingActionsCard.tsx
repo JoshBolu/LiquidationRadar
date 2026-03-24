@@ -39,7 +39,7 @@ export default function LendingActionsCard({
   const [usdEstimate, setUsdEstimate] = useState<string | null>(null);
   const [usdLoading, setUsdLoading] = useState(false);
 
-  const { approve, depositCollateral, mintDsc, burnDsc, redeemCollateral, pending } =
+  const { approve, depositCollateral, mintRsc, burnRsc, redeemCollateral, pending } =
     useLendingActions(userAddress);
 
   useEffect(() => {
@@ -82,9 +82,9 @@ export default function LendingActionsCard({
         await approve(token, amountWei);
         await depositCollateral(token, amountWei);
       } else if (tab === "MINT") {
-        await mintDsc(amountWei);
+        await mintRsc(amountWei);
       } else if (tab === "BURN") {
-        await burnDsc(amountWei);
+        await burnRsc(amountWei);
       } else if (tab === "REDEEM") {
         await redeemCollateral(token, amountWei);
       }

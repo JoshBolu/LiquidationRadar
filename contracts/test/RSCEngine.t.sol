@@ -92,47 +92,47 @@ contract RSCEngineTest is Test {
         engine.depositCollateral(randomToken, 1 ether);
     }
 
-    /* ---------- mintDsc ---------- */
+    /* ---------- mintRsc ---------- */
 
-    function test_MintDsc_Success() public {
+    function test_MintRsc_Success() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 2 ether);
         engine.depositCollateral(address(mockEth), 2 ether);
-        engine.mintDsc(2_000 ether);
+        engine.mintRsc(2_000 ether);
         vm.stopPrank();
 
-        assertEq(engine.getDscMinted(alice), 2_000 ether);
+        assertEq(engine.getRscMinted(alice), 2_000 ether);
         assertEq(rsc.balanceOf(alice), 2_000 ether);
     }
 
-    function test_MintDsc_RevertWhen_BreaksHealthFactor() public {
+    function test_MintRsc_RevertWhen_BreaksHealthFactor() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 1 ether);
         engine.depositCollateral(address(mockEth), 1 ether);
         vm.expectRevert();
-        engine.mintDsc(2_000 ether);
+        engine.mintRsc(2_000 ether);
         vm.stopPrank();
     }
 
-    function test_RevertWhen_MintDsc_ZeroAmount() public {
+    function test_RevertWhen_MintRsc_ZeroAmount() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 1 ether);
         engine.depositCollateral(address(mockEth), 1 ether);
         vm.expectRevert(RSCEngine.RSCEngine__NeedsMoreThanZero.selector);
-        engine.mintDsc(0);
+        engine.mintRsc(0);
         vm.stopPrank();
     }
 
-    /* ---------- depositCollateralAndMintDsc ---------- */
+    /* ---------- depositCollateralAndMintRsc ---------- */
 
-    function test_DepositCollateralAndMintDSC() public {
+    function test_DepositCollateralAndMintRSC() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 2 ether);
-        engine.depositCollateralAndMintDsc(address(mockEth), 2 ether, 2_000 ether);
+        engine.depositCollateralAndMintRsc(address(mockEth), 2 ether, 2_000 ether);
         vm.stopPrank();
 
         assertEq(engine.getCollateralBalanceOfUser(alice, address(mockEth)), 2 ether);
-        assertEq(engine.getDscMinted(alice), 2_000 ether);
+        assertEq(engine.getRscMinted(alice), 2_000 ether);
         assertEq(rsc.balanceOf(alice), 2_000 ether);
     }
 
@@ -152,23 +152,23 @@ contract RSCEngineTest is Test {
     function test_RevertWhen_RedeemCollateral_BreaksHealthFactor() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 2 ether);
-        engine.depositCollateralAndMintDsc(address(mockEth), 2 ether, 2_000 ether);
+        engine.depositCollateralAndMintRsc(address(mockEth), 2 ether, 2_000 ether);
         vm.expectRevert();
         engine.redeemCollateral(address(mockEth), 2 ether);
         vm.stopPrank();
     }
 
-    /* ---------- burnDsc / redeemCollateralForDsc ---------- */
+    /* ---------- burnRsc / redeemCollateralForRsc ---------- */
 
-    function test_RedeemCollateralForDsc() public {
+    function test_RedeemCollateralForRsc() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 2 ether);
-        engine.depositCollateralAndMintDsc(address(mockEth), 2 ether, 1_000 ether);
+        engine.depositCollateralAndMintRsc(address(mockEth), 2 ether, 1_000 ether);
         rsc.approve(address(engine), 500 ether);
-        engine.redeemCollateralForDsc(address(mockEth), 0.5 ether, 500 ether);
+        engine.redeemCollateralForRsc(address(mockEth), 0.5 ether, 500 ether);
         vm.stopPrank();
 
-        assertEq(engine.getDscMinted(alice), 500 ether);
+        assertEq(engine.getRscMinted(alice), 500 ether);
         assertEq(engine.getCollateralBalanceOfUser(alice, address(mockEth)), 1.5 ether);
         assertEq(mockEth.balanceOf(alice), 98.5 ether);
     }
@@ -178,11 +178,11 @@ contract RSCEngineTest is Test {
     function test_GetAccountInformation() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 2 ether);
-        engine.depositCollateralAndMintDsc(address(mockEth), 2 ether, 1_000 ether);
+        engine.depositCollateralAndMintRsc(address(mockEth), 2 ether, 1_000 ether);
         vm.stopPrank();
 
-        (uint256 dscMinted, uint256 collateralValue) = engine.getAccountInformation(alice);
-        assertEq(dscMinted, 1_000 ether);
+        (uint256 rscMinted, uint256 collateralValue) = engine.getAccountInformation(alice);
+        assertEq(rscMinted, 1_000 ether);
         assertGt(collateralValue, 0);
     }
 
@@ -194,7 +194,7 @@ contract RSCEngineTest is Test {
     function test_GetHealthFactor_WithPosition() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 2 ether);
-        engine.depositCollateralAndMintDsc(address(mockEth), 2 ether, 1_000 ether);
+        engine.depositCollateralAndMintRsc(address(mockEth), 2 ether, 1_000 ether);
         vm.stopPrank();
 
         uint256 hf = engine.getHealthFactor(alice);
@@ -206,7 +206,7 @@ contract RSCEngineTest is Test {
     function test_Liquidate_Success() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 10 ether);
-        engine.depositCollateralAndMintDsc(address(mockEth), 10 ether, 1_500 ether);
+        engine.depositCollateralAndMintRsc(address(mockEth), 10 ether, 1_500 ether);
         vm.stopPrank();
 
         oracle.setPrice(address(mockEth), 200e8);
@@ -225,7 +225,7 @@ contract RSCEngineTest is Test {
     function test_RevertWhen_Liquidate_HealthFactorOk() public {
         vm.startPrank(alice);
         mockEth.approve(address(engine), 2 ether);
-        engine.depositCollateralAndMintDsc(address(mockEth), 2 ether, 1_000 ether);
+        engine.depositCollateralAndMintRsc(address(mockEth), 2 ether, 1_000 ether);
         vm.stopPrank();
 
         vm.prank(liquidator);

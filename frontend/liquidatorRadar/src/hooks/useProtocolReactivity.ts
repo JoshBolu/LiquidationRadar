@@ -7,7 +7,7 @@ import type { Address } from "viem";
 
 /**
  * Single reactive hook for protocol events (DemoOracle + RSCEngine).
- * Subscribes to PriceUpdated, CollateralDeposited, CollateralRedeemed, DscMinted, DscBurned, Liquidated.
+ * Subscribes to PriceUpdated, CollateralDeposited, CollateralRedeemed, RscMinted, RscBurned, Liquidated.
  * Pushes updates to store (event feed, liquidations, watched rows) and returns position snapshot for connected wallet.
  */
 export function useProtocolReactivity(
@@ -18,7 +18,7 @@ export function useProtocolReactivity(
 ) {
   const [positionUpdate, setPositionUpdate] = useState<{
     healthFactor: bigint;
-    totalDscMinted: bigint;
+    totalRscMinted: bigint;
     collateralValueInUsd: bigint;
   } | null>(null);
 
@@ -73,7 +73,7 @@ export function useProtocolReactivity(
       // Trigger wallet balance refresh for the connected user on position-changing engine events
       if (
         connectedAddress &&
-        ["CollateralDeposited", "CollateralRedeemed", "DscMinted", "DscBurned"].includes(
+        ["CollateralDeposited", "CollateralRedeemed", "RscMinted", "RscBurned"].includes(
           update.event
         ) &&
         "user" in update &&
@@ -95,7 +95,7 @@ export function useProtocolReactivity(
         if (snap) {
           setPositionUpdate({
             healthFactor: snap.healthFactor,
-            totalDscMinted: snap.totalDscMinted,
+            totalRscMinted: snap.totalRscMinted,
             collateralValueInUsd: snap.collateralValueInUsd,
           });
         }

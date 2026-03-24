@@ -64,14 +64,14 @@ export function toEventFeedItem(update: ProtocolReactiveUpdate): {
         type: "INFO",
         message: `${shortAddr(update.redeemedFrom)} redeemed ${fmtTokenAmount(update.amount)} collateral`,
       };
-    case "DscMinted":
+    case "RscMinted":
       return {
         id,
         timestamp: ts,
         type: "MINT",
         message: `${shortAddr(update.user)} minted $${fmtUsd(update.amount)} RSC`,
       };
-    case "DscBurned":
+    case "RscBurned":
       return {
         id,
         timestamp: ts,

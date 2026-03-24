@@ -59,7 +59,7 @@ interface AppState {
   updateWatchedRowsFromSnapshots: (snapshots: Array<{
     address: `0x${string}`;
     healthFactor: bigint;
-    totalDscMinted: bigint;
+    totalRscMinted: bigint;
     collateralValueInUsd: bigint;
   }>) => void;
 }
@@ -132,7 +132,7 @@ export const useAppStore = create<AppState>()(
               ...row,
               healthFactor: Number(snap.healthFactor) / 1e18,
               collateralUsd: Number(snap.collateralValueInUsd) / 1e18,
-              debtUsd: Number(snap.totalDscMinted) / 1e18,
+              debtUsd: Number(snap.totalRscMinted) / 1e18,
             };
           });
           return { watchedAddresses: next };
