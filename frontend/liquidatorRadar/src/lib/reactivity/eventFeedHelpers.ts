@@ -83,7 +83,7 @@ export function toEventFeedItem(update: ProtocolReactiveUpdate): {
         id,
         timestamp: ts,
         type: "LIQUIDATION",
-        message: `${shortAddr(update.liquidator)} liquidated ${shortAddr(update.user)} (${tokenLabel(update.collateral)}) — debt: $${fmtUsd(update.debtCovered)}, seized: $${fmtUsd(update.collateralSeized)}`,
+        message: `${shortAddr(update.liquidator)} liquidated ${shortAddr(update.user)} (${tokenLabel(update.collateral)}) — debt: RSC ${fmtUsd(update.debtCovered)}, seized: ${fmtUsd(update.collateralSeized)}`,
       };
     default:
       return { id, timestamp: ts, type: "INFO", message: "Protocol event" };

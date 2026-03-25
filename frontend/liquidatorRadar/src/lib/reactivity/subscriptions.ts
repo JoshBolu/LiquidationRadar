@@ -309,3 +309,70 @@ export async function subscribeToProtocolEvents(
   if (result instanceof Error) return result;
   return result;
 }
+
+export type PriceUpdateOnly = {
+  event: "PriceUpdated";
+  updater: `0x${string}`;
+  token: `0x${string}`;
+  oldPrice: bigint;
+  newPrice: bigint;
+};
+
+/**
+ * Subscribe only to DemoOracle PriceUpdated events.
+ * Unlike subscribeToProtocolEvents, this does NOT rely on ethCalls / snapshots.
+ */
+export async function subscribeToPriceUpdates(
+  onUpdate: (update: PriceUpdateOnly) => void
+): Promise<Subscription | Error> {
+  const sdk = await getSdk();
+
+  const result = await sdk.subscribe({
+    eventContractSources: [DemoOracleAddress],
+    ethCalls: [],
+    onData(raw: {
+      result?: {
+        topics?: `0x${string}`[];
+        data?: `0x${string}`;
+        simulationResults?: `0x${string}`[];
+      };
+    }) {
+      const res = raw?.result;
+      if (!res?.topics?.length || !res.data) return;
+      const topic0 = res.topics[0];
+      if (topic0 !== PriceUpdatedTopic) return;
+
+      try {
+        const decoded = decodeEventLog({
+          abi: DemoOracleAbi,
+          data: res.data,
+          // PriceUpdated has 2 indexed addresses, so topics are:
+          // topic0 = event signature, topic1 = updater, topic2 = token
+          topics: res.topics as [`0x${string}`, `0x${string}`, `0x${string}`],
+        });
+
+        if (decoded.eventName !== "PriceUpdated" || !decoded.args) return;
+
+        const args = decoded.args as unknown as {
+          updater: `0x${string}`;
+          token: `0x${string}`;
+          oldPrice: bigint;
+          newPrice: bigint;
+        };
+
+        onUpdate({
+          event: "PriceUpdated",
+          updater: args.updater,
+          token: args.token,
+          oldPrice: args.oldPrice,
+          newPrice: args.newPrice,
+        });
+      } catch {
+        // Ignore decode errors (should be rare; the client-side filter can be imperfect).
+      }
+    },
+  });
+
+  if (result instanceof Error) return result;
+  return result;
+}

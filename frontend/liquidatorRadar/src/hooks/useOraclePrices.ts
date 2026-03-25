@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPublicClient, http } from "viem";
 import {
   DemoOracleAbi,
@@ -12,6 +12,10 @@ import {
 import { somniaTestnet } from "../data/mockTokens";
 import { useToast } from "../context/ToastContext";
 import { getMeaningfulErrorMessage } from "../utils/errorMessage";
+import {
+  subscribeToPriceUpdates,
+  type PriceUpdateOnly,
+} from "../lib/reactivity/subscriptions";
 
 export interface OraclePriceAsset {
   id: string;
@@ -40,6 +44,7 @@ export function useOraclePrices() {
   const [assets, setAssets] = useState<OraclePriceAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasInitializedRef = useRef(false);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -65,11 +70,13 @@ export function useOraclePrices() {
         };
       });
       setAssets(result);
+      hasInitializedRef.current = true;
     } catch (err) {
       const msg = getMeaningfulErrorMessage(err);
       addToast(msg, "error");
       setError(msg);
       setAssets([]);
+      hasInitializedRef.current = false;
     } finally {
       setLoading(false);
     }
@@ -78,6 +85,61 @@ export function useOraclePrices() {
   useEffect(() => {
     refetch();
   }, [refetch]);
+
+  // Keep prices uniform across the whole dashboard by reacting to DemoOracle `PriceUpdated`.
+  useEffect(() => {
+    let cancelled = false;
+    let sub: { unsubscribe: () => Promise<unknown> } | null = null;
+
+    subscribeToPriceUpdates((update: PriceUpdateOnly) => {
+      if (cancelled) return;
+      if (!hasInitializedRef.current) return;
+
+      const tokenAddr = update.token.toLowerCase();
+      const meta = TOKENS.find((t) => t.address.toLowerCase() === tokenAddr);
+      if (!meta) return;
+
+      const priceRaw = update.newPrice;
+      const priceUsd = Number(priceRaw) / 10 ** ORACLE_DECIMALS;
+
+      setAssets((prev) => {
+        const idx = prev.findIndex((a) => a.address.toLowerCase() === tokenAddr);
+        const nextAsset: OraclePriceAsset = {
+          id: meta.id,
+          symbol: meta.symbol,
+          address: meta.address,
+          priceRaw,
+          priceUsd,
+        };
+
+        if (idx === -1) return [...prev, nextAsset];
+        return prev.map((a, i) => (i === idx ? nextAsset : a));
+      });
+    })
+      .then((s) => {
+        if (cancelled) {
+          (s as { unsubscribe?: () => Promise<unknown> })?.unsubscribe?.().catch(() => {});
+          return;
+        }
+        if (s instanceof Error) {
+          const msg = s.message ?? "Failed to subscribe to PriceUpdated";
+          setError(msg);
+          addToast(msg, "error");
+          return;
+        }
+        sub = s;
+      })
+      .catch((err) => {
+        const msg = getMeaningfulErrorMessage(err);
+        setError(msg);
+        addToast(msg, "error");
+      });
+
+    return () => {
+      cancelled = true;
+      sub?.unsubscribe().catch(() => {});
+    };
+  }, [addToast]);
 
   return { assets, loading, error, refetch };
 }
