@@ -22,7 +22,7 @@ It shows how **health factor** monitoring, **oracle price** changes, and **liqui
 - **Real-time price simulation** — `DemoOracle.stepPrice` moves prices by **5%** per call; **2 minute** cooldown per caller for `stepPrice` (owner `setPrice` / `setPrices` are not cooldown-limited).
 - **Health factor monitoring** — `getHealthFactor` / `getAccountInformation` on the engine; positions with HF below `1e18` are liquidatable.
 - **Event-driven reactivity (Somnia)** — Frontend and bot use the Reactivity SDK so protocol events can drive updates without polling those event streams.
-- **Automated liquidation bot** — On `PriceUpdated`, loops tracked users, reads HF, and submits `liquidate` when unsafe.
+- **Automated liquidation bot** — On `PriceUpdated`, loops tracked users, reads HF, and submits `liquidate` when unsafe; user set is seeded from `CollateralDeposited` / `RscMinted` (see [`bot/README.md`](bot/README.md)).
 
 ---
 
