@@ -1,6 +1,0 @@
-{
-  "installCommand": "[ -d frontend/liquidatorRadar ] && cd frontend/liquidatorRadar; pnpm install",
-  "buildCommand": "[ -d frontend/liquidatorRadar ] && cd frontend/liquidatorRadar; pnpm build",
-  "outputDirectory": "frontend/liquidatorRadar/dist"
-}
-
