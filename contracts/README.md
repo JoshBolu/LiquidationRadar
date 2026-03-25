@@ -1,6 +1,6 @@
 # Liquidation Radar — Smart contracts
 
-Foundry-based Solidity contracts for a minimal **CDP-style** system: users post **mock ERC20 collateral**, mint **RSC** (ReactiveSomniaCoin) through **`RSCEngine`**, and can be **liquidated** when their **health factor** drops below `1e18` (1.0 in 18-decimal fixed form).
+Foundry-based Solidity contracts for a minimal **Lending Protocol**: users Deposit **mock ERC20 collateral**, mint **RSC** (ReactiveSomniaCoin) through **`RSCEngine`**, and can be **liquidated** when their **health factor** drops below `1e18` (1.0 in 18-decimal fixed form).
 
 ---
 
@@ -18,24 +18,24 @@ Foundry-based Solidity contracts for a minimal **CDP-style** system: users post 
 
 Core logic: collateral ledger, RSC minted per user, oracle reads, HF checks, liquidation.
 
-| Responsibility | Detail |
-|----------------|--------|
-| Collateral | `mapping(user => token => amount)`; only allowed collateral tokens. |
-| Debt | `rscMinted[user]` — RSC amount minted through the engine. |
-| Oracle | `IDemoOracle` for `getPrice` / USD valuation. |
-| RSC token | `ReactiveSomniaCoin` — engine is owner and mints/burns via `mint` / `burn`. |
+| Responsibility | Detail                                                                      |
+| -------------- | --------------------------------------------------------------------------- |
+| Collateral     | `mapping(user => token => amount)`; only allowed collateral tokens.         |
+| Debt           | `rscMinted[user]` — RSC amount minted through the engine.                   |
+| Oracle         | `IDemoOracle` for `getPrice` / USD valuation.                               |
+| RSC token      | `ReactiveSomniaCoin` — engine is owner and mints/burns via `mint` / `burn`. |
 
 **Important external functions**
 
-| Function | Behavior |
-|----------|----------|
-| `depositCollateral(token, amount)` | Pulls ERC20 from `msg.sender`, credits collateral, emits `CollateralDeposited`. |
-| `depositCollateralAndMintRsc(token, amountCollateral, amountRscToMint)` | Deposits then mints in one tx. |
-| `mintRsc(amountRscToMint)` | Increases debt, mints RSC to `msg.sender`, checks HF, emits `RscMinted`. |
-| `burnRsc(amount)` | Burns RSC from `msg.sender` (transfer to engine then burn), reduces debt, emits `RscBurned`. |
-| `redeemCollateral(token, amount)` | Sends collateral to `msg.sender`; **requires HF ≥ 1 after**; emits `CollateralRedeemed`. |
-| `redeemCollateralForRsc(token, amountCollateral, amountRscToBurn)` | **Burns RSC first**, then redeems collateral (order matters for HF). |
-| `liquidate(collateral, user, debtToCover)` | Only if `_healthFactor(user) < 1e18`; redeems collateral to liquidator (debt-equivalent + **10% bonus**), burns `debtToCover` RSC from liquidator; emits `Liquidated`. Reverts if user HF did not improve or liquidator ends unhealthy. |
+| Function                                                                | Behavior                                                                                                                                                                                                                                |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `depositCollateral(token, amount)`                                      | Pulls ERC20 from `msg.sender`, credits collateral, emits `CollateralDeposited`.                                                                                                                                                         |
+| `depositCollateralAndMintRsc(token, amountCollateral, amountRscToMint)` | Deposits then mints in one tx.                                                                                                                                                                                                          |
+| `mintRsc(amountRscToMint)`                                              | Increases debt, mints RSC to `msg.sender`, checks HF, emits `RscMinted`.                                                                                                                                                                |
+| `burnRsc(amount)`                                                       | Burns RSC from `msg.sender` (transfer to engine then burn), reduces debt, emits `RscBurned`.                                                                                                                                            |
+| `redeemCollateral(token, amount)`                                       | Sends collateral to `msg.sender`; **requires HF ≥ 1 after**; emits `CollateralRedeemed`.                                                                                                                                                |
+| `redeemCollateralForRsc(token, amountCollateral, amountRscToBurn)`      | **Burns RSC first**, then redeems collateral (order matters for HF).                                                                                                                                                                    |
+| `liquidate(collateral, user, debtToCover)`                              | Only if `_healthFactor(user) < 1e18`; redeems collateral to liquidator (debt-equivalent + **10% bonus**), burns `debtToCover` RSC from liquidator; emits `Liquidated`. Reverts if user HF did not improve or liquidator ends unhealthy. |
 
 **Constants (from source)**
 
@@ -92,13 +92,13 @@ If `totalRscMinted == 0`, HF is `type(uint256).max`.
 
 ## Events and reactivity
 
-| Event | Contract | Role |
-|-------|----------|------|
-| `CollateralDeposited` | `RSCEngine` | User/position activity; bot adds user to tracking set. |
-| `CollateralRedeemed` | `RSCEngine` | Withdrawals; frontend subscription decodes for feed + snapshots. |
-| `RscMinted` / `RscBurned` | `RSCEngine` | Debt changes; bot tracks mints, prunes on burn when debt hits zero. |
-| `Liquidated` | `RSCEngine` | Liquidation feed and recent-liquidations UI. |
-| `PriceUpdated` | `DemoOracle` | Price moves; **HF and USD values** change for all positions using that token; bot runs liquidation pass; frontend refreshes collateral valuation context. |
+| Event                     | Contract     | Role                                                                                                                                                      |
+| ------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CollateralDeposited`     | `RSCEngine`  | User/position activity; bot adds user to tracking set.                                                                                                    |
+| `CollateralRedeemed`      | `RSCEngine`  | Withdrawals; frontend subscription decodes for feed + snapshots.                                                                                          |
+| `RscMinted` / `RscBurned` | `RSCEngine`  | Debt changes; bot tracks mints, prunes on burn when debt hits zero.                                                                                       |
+| `Liquidated`              | `RSCEngine`  | Liquidation feed and recent-liquidations UI.                                                                                                              |
+| `PriceUpdated`            | `DemoOracle` | Price moves; **HF and USD values** change for all positions using that token; bot runs liquidation pass; frontend refreshes collateral valuation context. |
 
 Price updates do **not** mutate balances; they change **oracle outputs**, so **`getAccountCollateralValue`**, **`getHealthFactor`**, and liquidation eligibility all change with the same on-chain state.
 

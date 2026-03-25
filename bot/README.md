@@ -2,7 +2,7 @@
 
 TypeScript service that **subscribes** to Somnia Testnet events via **`@somnia-chain/reactivity`**, maintains a **set of borrower addresses** on disk, and on **`PriceUpdated`** evaluates **`getHealthFactor`** for each tracked user and submits **`RSCEngine.liquidate`** when HF &lt; `1e18`.
 
-Transactions are signed with **`ethers.js` v6** using a **`PRIVATE_KEY`** from the environment (dedicated bot wallet — see [Wallet safety](#wallet-safety)).
+Transactions are signed with **`ethers.js` v6** using a **`PRIVATE_KEY`** supplied at runtime in the process environment (dedicated bot wallet — see [Wallet safety](#wallet-safety)). Prefer passing it via a **shell session** (see [Clone and run](#clone-and-run)), not a file on disk.
 
 ---
 
@@ -74,7 +74,7 @@ There is **no polling loop** for prices; liquidation checks run when **`PriceUpd
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `SOMNIA_RPC_URL` | Yes | HTTP JSON-RPC URL for Somnia Testnet |
-| `PRIVATE_KEY` | Yes | Hex private key for the bot account (with `0x` prefix as typically used by ethers) |
+| `PRIVATE_KEY` | Yes | Hex private key for the bot account (with `0x` prefix as typically used by ethers). Set in the shell when you start the process — do **not** put it in `.env`. |
 | `RSC_ENGINE_ADDRESS` | No | Overrides default in `abi/RSCEngine-abi.ts` |
 | `DEMO_ORACLE_ADDRESS` | No | Overrides default in `abi/DemoOracle-abi.ts` |
 | `RSC_ADDRESS` | No | Overrides default in `abi/ReactiveSomniaCoin-abi.ts` |
@@ -89,7 +89,7 @@ Chain metadata for viem is **`chainId` 50312** (`bot/src/chain.ts`); WebSocket U
 
 - **Create a new wallet** used only for this bot (e.g. a fresh account in MetaMask or `cast wallet new`, then export the private key if you must).
 - Fund it with **only enough native SOM** on Somnia Testnet to pay gas for `approve` and `liquidate` txs.
-- The private key in **`.env`** must stay **secret**; never commit `.env` (keep it gitignored).
+- **Do not store the private key in `.env` or any committed file.** Prefer typing it once per session (hidden prompt), `export` for the current shell, run the bot, then `unset` so it is not left in the environment or on disk.
 - Rotate the key if it is ever leaked.
 
 ---
@@ -104,27 +104,31 @@ cd LiquidationRadarMVP/bot
 npm install
 ```
 
-Create **`bot/.env`** (same directory as `package.json`):
+Optional: create **`bot/.env`** for **non-secret** values only (for example `SOMNIA_RPC_URL` and optional `*_ADDRESS` overrides). **`dotenv` does not override variables already set in the shell**, so a **`PRIVATE_KEY` you `export` in the shell is never replaced by a file.**
 
 ```env
 SOMNIA_RPC_URL=https://dream-rpc.somnia.network
-PRIVATE_KEY=0xYOUR_DEDICATED_BOT_PRIVATE_KEY
 # Optional if you redeployed:
 # RSC_ENGINE_ADDRESS=0x...
 # DEMO_ORACLE_ADDRESS=0x...
 # RSC_ADDRESS=0x...
 ```
 
-Build (optional) and start:
+Build (optional), then start with the key only in the current shell session:
 
 ```bash
-npm run build
-npm start
+npm run build   # optional
+read -s -p "Private key: " PRIVATE_KEY; echo
+export PRIVATE_KEY
+npm run start
+unset PRIVATE_KEY
 ```
 
-`npm start` runs **`ts-node src/index.ts`**. You should see startup logs, approval logs if needed, then **`[listeners] subscribed to ...`** and **`[bot] running and waiting for events...`**.
+`npm run start` runs **`ts-node src/index.ts`**. You should see startup logs, approval logs if needed, then **`[listeners] subscribed to ...`** and **`[bot] running and waiting for events...`**.
 
 Ensure deployed contract addresses in **`bot/abi/*-abi.ts`** match the network you use, or set the `*_ADDRESS` env overrides.
+
+If you prefer not to use `.env` at all, **`export SOMNIA_RPC_URL=...`** (and any overrides) in the same shell before `npm run start`.
 
 ---
 

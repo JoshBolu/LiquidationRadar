@@ -8,10 +8,10 @@ It shows how **health factor** monitoring, **oracle price** changes, and **liqui
 
 ## Architecture
 
-| Layer | Role |
-|--------|------|
-| **`contracts/`** | `RSCEngine` (deposit, mint, redeem, burn, liquidate), `ReactiveSomniaCoin` (RSC ERC20, engine-owned mint/burn), `DemoOracle` (demo USD prices + `PriceUpdated`), mock collateral ERC20s (`MockBtc`, `MockEth`, `MockSomi`). |
-| **`bot/`** | Subscribes to `DemoOracle` + `RSCEngine` via the Reactivity SDK; tracks users in `users.json`; on `PriceUpdated`, evaluates health factors and calls `liquidate` with **ethers.js**. |
+| Layer                           | Role                                                                                                                                                                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`contracts/`**                | `RSCEngine` (deposit, mint, redeem, burn, liquidate), `ReactiveSomniaCoin` (RSC ERC20, engine-owned mint/burn), `DemoOracle` (demo USD prices + `PriceUpdated`), mock collateral ERC20s (`MockBtc`, `MockEth`, `MockSomi`). |
+| **`bot/`**                      | Subscribes to `DemoOracle` + `RSCEngine` via the Reactivity SDK; tracks users in `users.json`; on `PriceUpdated`, evaluates health factors and calls `liquidate` with **ethers.js**.                                        |
 | **`frontend/liquidatorRadar/`** | React + TypeScript + Vite + Tailwind: wallet connection, lending actions, Price Lab (`stepPrice`), position and watched-address UI, **viem** reads + Reactivity subscriptions that attach **eth_calls** for live snapshots. |
 
 ---
@@ -28,11 +28,11 @@ It shows how **health factor** monitoring, **oracle price** changes, and **liqui
 
 ## Tech stack
 
-| Area | Technologies |
-|------|----------------|
-| Smart contracts | Solidity (Foundry project under `contracts/`, `solc` from `foundry.toml`), OpenZeppelin (`ReentrancyGuard`, ERC20, `Ownable`). |
-| Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 3, **viem** 2.x, **Zustand** (persisted watched addresses), `@somnia-chain/reactivity`. |
-| Bot | TypeScript, **ethers** 6.x (wallet + contracts), **viem** (chain, `decodeEventLog`, WebSocket public client), `@somnia-chain/reactivity`. |
+| Area            | Technologies                                                                                                                              |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Smart contracts | Solidity (Foundry project under `contracts/`, `solc` from `foundry.toml`), OpenZeppelin (`ReentrancyGuard`, ERC20, `Ownable`).            |
+| Frontend        | React 19, TypeScript, Vite 7, Tailwind CSS 3, **viem** 2.x, **Zustand** (persisted watched addresses), `@somnia-chain/reactivity`.        |
+| Bot             | TypeScript, **ethers** 6.x (wallet + contracts), **viem** (chain, `decodeEventLog`, WebSocket public client), `@somnia-chain/reactivity`. |
 
 The frontend does **not** use ethers.js; on-chain writes use **viem** `walletClient` + `publicClient`.
 
@@ -45,29 +45,6 @@ The frontend does **not** use ethers.js; on-chain writes use **viem** `walletCli
 3. **`DemoOracle`** prices feed `getUsdValue` / health factor inside the engine. **`PriceUpdated`** fires whenever a price changes.
 4. **Frontend** subscribes to oracle + engine contracts; each matching log triggers **simulation results** (`getHealthFactor`, `getAccountInformation` for connected + watched addresses) and updates the UI (event feed, tables, position when snapshots exist).
 5. **Bot** maintains a **JSON set of user addresses** learned from `CollateralDeposited` / `RscMinted`, prunes on zero debt after `RscBurned`, and on **`PriceUpdated`** runs liquidation checks for all tracked users.
-
----
-
-## How components interact
-
-```mermaid
-flowchart LR
-  subgraph chain [Somnia Testnet]
-    O[DemoOracle]
-    E[RSCEngine]
-    R[ReactiveSomniaCoin]
-    M[Mock tokens]
-  end
-  O -->|getPrice| E
-  E -->|mint/burn RSC| R
-  M -->|collateral| E
-  O -->|PriceUpdated| SDK[@somnia-chain/reactivity]
-  E -->|engine events| SDK
-  SDK --> FE[frontend liquidatorRadar]
-  SDK --> BOT[bot]
-  FE -->|viem txs| E
-  BOT -->|ethers liquidate| E
-```
 
 ---
 
@@ -90,7 +67,7 @@ More detail: [`contracts/README.md`](contracts/README.md), [`bot/README.md`](bot
 
 1. **Contracts** — Install Foundry; in `contracts/`, `forge install` if needed, then `forge build` / `forge test`. Deploy with `DeployProject.s.sol` (set broadcast key as per your Foundry workflow). Update ABI JSON exports and deployed addresses in `frontend/liquidatorRadar/src/contracts-abi/` and `bot/abi/` if you redeploy.
 
-2. **Bot** — See [`bot/README.md`](bot/README.md): Node 18+, `npm install`, configure `.env` (`SOMNIA_RPC_URL`, `PRIVATE_KEY`, optional address overrides), `npm run start`.
+2. **Bot** — See [`bot/README.md`](bot/README.md): Node 18+, `npm install`, optional `.env` for non-secrets (e.g. `SOMNIA_RPC_URL`), supply `PRIVATE_KEY` via the shell when starting (see bot README), `npm run start`.
 
 3. **Frontend** — From `frontend/liquidatorRadar/`: `pnpm install` (or `npm install`), `pnpm dev`. Use a browser wallet on **Somnia Testnet** (chain id **50312**).
 
@@ -98,8 +75,8 @@ More detail: [`contracts/README.md`](contracts/README.md), [`bot/README.md`](bot
 
 ## Documentation index
 
-| Document | Contents |
-|----------|----------|
-| [`contracts/README.md`](contracts/README.md) | Protocol design, engine/oracle/mocks, HF & liquidation |
-| [`bot/README.md`](bot/README.md) | Event subscription, `users.json`, runbook & wallet safety |
-| [`frontend/README.md`](frontend/README.md) | Dashboard UI, Zustand, Reactivity + viem patterns |
+| Document                                     | Contents                                                  |
+| -------------------------------------------- | --------------------------------------------------------- |
+| [`contracts/README.md`](contracts/README.md) | Protocol design, engine/oracle/mocks, HF & liquidation    |
+| [`bot/README.md`](bot/README.md)             | Event subscription, `users.json`, runbook & wallet safety |
+| [`frontend/README.md`](frontend/README.md)   | Dashboard UI, Zustand, Reactivity + viem patterns         |
