@@ -64,8 +64,8 @@ export function useProtocolReactivity(
           id: `liq-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
           address: update.user,
           token: update.collateral,
-          collateralUsd: (Number(update.collateralSeized) / 1e18).toFixed(2),
-          debtCoveredUsd: (Number(update.debtCovered) / 1e18).toFixed(2),
+          collateralUsd: (Number(update.collateralSeized) / 1e18).toFixed(4),
+          debtCoveredUsd: (Number(update.debtCovered) / 1e18).toFixed(4),
           timeLabel: new Date().toLocaleTimeString(),
         });
       }

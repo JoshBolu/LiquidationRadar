@@ -57,6 +57,7 @@ export function useCollateralBreakdown(userAddress: Address | null) {
           args: [address, rawBalance],
         })) as bigint;
         const amount = (Number(rawBalance) / 1e18).toFixed(4);
+        // Position card "token price" (USD) should be readable; keep 2 decimals.
         const usd = (Number(rawUsd) / 1e18).toFixed(2);
         results.push({
           id,

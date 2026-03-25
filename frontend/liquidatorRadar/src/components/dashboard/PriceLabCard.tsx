@@ -12,12 +12,12 @@ function formatPrice(symbol: string, priceUsd: number): string {
   if (priceUsd < 1) {
     return priceUsd.toLocaleString(undefined, {
       minimumFractionDigits: 4,
-      maximumFractionDigits: 6,
+      maximumFractionDigits: 4,
     });
   }
   return priceUsd.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
   });
 }
 

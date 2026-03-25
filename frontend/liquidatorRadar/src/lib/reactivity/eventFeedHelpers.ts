@@ -18,17 +18,17 @@ function tokenLabel(token: string): string {
 }
 
 function fmtUsd(wei: bigint): string {
-  return (Number(wei) / 1e18).toFixed(2);
+  return (Number(wei) / 1e18).toFixed(4);
 }
 
 // DemoOracle stores prices with 8 decimals (1e8), e.g. 2000 * 1e8 = $2,000.00
 function fmtOraclePrice(price: bigint): string {
-  return (Number(price) / 1e8).toFixed(2);
+  return (Number(price) / 1e8).toFixed(4);
 }
 
-// Collateral amounts and RSC amounts use 18 decimals; show more precision for tokens like mBTC/mETH.
+// Collateral amounts use 18 decimals; show more precision for tokens like mBTC/mETH.
 function fmtTokenAmount(amount: bigint): string {
-  return (Number(amount) / 1e18).toFixed(5);
+  return (Number(amount) / 1e18).toFixed(4);
 }
 
 export function toEventFeedItem(update: ProtocolReactiveUpdate): {

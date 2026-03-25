@@ -12,7 +12,10 @@ const CIRCUMFERENCE = 2 * Math.PI * 58;
 
 function formatUsd(wei: bigint): string {
   const val = Number(wei) / 1e18;
-  return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return val.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function healthStatus(hf: bigint): string {

@@ -77,10 +77,10 @@ const WatchedAddressesTable = ({ rows }: WatchedAddressesTableProps) => {
                   </span>
                 </td>
                 <td className="px-4 py-4">
-                  ${row.collateralUsd.toLocaleString()}
+                  ${row.collateralUsd.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                 </td>
                 <td className="px-4 py-4">
-                  ${row.debtUsd.toLocaleString()}
+                  ${row.debtUsd.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                 </td>
                 <td className="px-4 py-4 text-right">
                   <button

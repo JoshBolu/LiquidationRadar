@@ -59,7 +59,7 @@ export default function LendingActionsCard({
           args: [token, amountWei],
         });
         if (cancelled) return;
-        setUsdEstimate((Number(usd as bigint) / 1e18).toFixed(2));
+        setUsdEstimate((Number(usd as bigint) / 1e18).toFixed(4));
       } catch {
         if (!cancelled) setUsdEstimate(null);
       } finally {
