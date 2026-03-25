@@ -1,12 +1,3 @@
-# liquidator-radar (Vite app)
-
-Quick start:
-
-```bash
-pnpm install
-pnpm dev
-```
-
 # Liquidation Radar — Frontend
 
 The UI lives in **`liquidatorRadar/`**: a **Vite + React 19 + TypeScript** app with **Tailwind CSS**, **viem** for RPC reads and wallet transactions, and **`@somnia-chain/reactivity`** for **event-driven** protocol updates without polling those events.
@@ -21,17 +12,17 @@ The UI lives in **`liquidatorRadar/`**: a **Vite + React 19 + TypeScript** app w
 
 ## Key features (implemented)
 
-| Feature                        | Implementation                                                                                                                                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Wallet connection              | `Header` + `WalletContext`: EIP-1193 `eth_requestAccounts`, viem `createWalletClient` + `custom(window.ethereum)`                                                                                |
+| Feature | Implementation |
+|---------|------------------|
+| Wallet connection | `Header` + `WalletContext`: EIP-1193 `eth_requestAccounts`, viem `createWalletClient` + `custom(window.ethereum)` |
 | Deposit / mint / redeem / burn | `LendingActionsCard` + `useLendingActions`: approve mock tokens, `depositCollateral`, `depositCollateralAndMintRsc`, `redeemCollateral`, `redeemCollateralForRsc`, `mintRsc`, `burnRsc` via viem |
-| Price simulation               | `PriceLabCard` + `useStepPrice`: `DemoOracle.stepPrice(token, increase)` (±5%, **2 min** cooldown per wallet)                                                                                    |
-| Health factor & position       | `PositionCard`: data from **`useProtocolReactivity`** (reactive snapshots) with fallback to **`usePosition`** (HTTP `readContract`)                                                              |
-| Watched addresses              | `WatchAddressCard` + `WatchedAddressesTable`; list persisted in **Zustand** (`localStorage`); rows updated from **reactivity snapshots**                                                         |
-| Live event feed                | `EventFeedCard` — items from **`useProtocolReactivity`** via `appendEventFeedItem`                                                                                                               |
-| Recent liquidations            | `RecentLiquidationsCard` — populated when **`Liquidated`** events appear in the subscription                                                                                                     |
-| Testnet faucet                 | `FaucetCard` + `useMint`: **`mintOnInterval`** on mock tokens (interval-gated on-chain)                                                                                                          |
-| Reactivity status              | `ReactivityStatusBar` reads **`reactivityStatus`** from the store (reserved for subscription lifecycle; may stay empty until wired)                                                              |
+| Price simulation | `PriceLabCard` + `useStepPrice`: `DemoOracle.stepPrice(token, increase)` (±5%, **2 min** cooldown per wallet) |
+| Health factor & position | `PositionCard`: data from **`useProtocolReactivity`** (reactive snapshots) with fallback to **`usePosition`** (HTTP `readContract`) |
+| Watched addresses | `WatchAddressCard` + `WatchedAddressesTable`; list persisted in **Zustand** (`localStorage`); rows updated from **reactivity snapshots** |
+| Live event feed | `EventFeedCard` — items from **`useProtocolReactivity`** via `appendEventFeedItem` |
+| Recent liquidations | `RecentLiquidationsCard` — populated when **`Liquidated`** events appear in the subscription |
+| Testnet faucet | `FaucetCard` + `useMint`: **`mintOnInterval`** on mock tokens (interval-gated on-chain) |
+| Reactivity status | `ReactivityStatusBar` reads **`reactivityStatus`** from the store (reserved for subscription lifecycle; may stay empty until wired) |
 
 ---
 
@@ -72,15 +63,15 @@ This design **avoids polling for protocol events**: updates are pushed when matc
 
 ## Contract interaction layer
 
-| Concern                     | Location                                                                                                               |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| ABIs + addresses            | `src/contracts-abi/*.ts`                                                                                               |
-| Lending txs                 | `useLendingActions.ts` — `publicClient` (HTTP) for gas estimate + receipt wait; `walletClient.writeContract` for sends |
-| Oracle price steps          | `useStepPrice.ts`                                                                                                      |
-| Token balances              | `useTokenBalances.ts` — HTTP reads of mock ERC20 `balanceOf`                                                           |
-| Collateral breakdown        | `useCollateralBreakdown.ts`                                                                                            |
-| Manual position             | `usePosition.ts` — `getHealthFactor` + `getAccountInformation`                                                         |
-| Oracle prices for Price Lab | `useOraclePrices.ts` — used by `PriceLabCard` with `DemoOracle.getPrices`                                              |
+| Concern | Location |
+|---------|----------|
+| ABIs + addresses | `src/contracts-abi/*.ts` |
+| Lending txs | `useLendingActions.ts` — `publicClient` (HTTP) for gas estimate + receipt wait; `walletClient.writeContract` for sends |
+| Oracle price steps | `useStepPrice.ts` |
+| Token balances | `useTokenBalances.ts` — HTTP reads of mock ERC20 `balanceOf` |
+| Collateral breakdown | `useCollateralBreakdown.ts` |
+| Manual position | `usePosition.ts` — `getHealthFactor` + `getAccountInformation` |
+| Oracle prices for Price Lab | `useOraclePrices.ts` — used by `PriceLabCard` with `DemoOracle.getPrices` |
 
 All on-chain **reads** in hooks use **viem** `createPublicClient` with **HTTP** transport unless noted; **reactivity** uses **WebSocket** for the SDK.
 
@@ -123,6 +114,6 @@ pnpm preview   # optional local preview of dist
 
 ## See also
 
-- [Root README](../../README.md)
+- [Root README](../README.md)
 - [Contracts README](../contracts/README.md)
 - [Bot README](../bot/README.md)
